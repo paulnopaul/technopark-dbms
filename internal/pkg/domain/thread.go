@@ -10,4 +10,3 @@ type Thread struct {
 	Slug string
 	Created string
 }
-
