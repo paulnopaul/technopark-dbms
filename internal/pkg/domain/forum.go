@@ -8,6 +8,7 @@ type Forum struct {
 	Threads int64
 }
 
+
 type ForumManager interface {
 	Create(f Forum) (*Forum, error)
 	Details(slug string) (*Forum, error)
