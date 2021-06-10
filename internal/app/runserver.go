@@ -1,9 +1,14 @@
 package app
 
 import (
-	"DBMSForum/internal/pkg/forum/delivery"
+	forumDelivery "DBMSForum/internal/pkg/forum/delivery"
 	"DBMSForum/internal/pkg/forum/usecase"
 	"DBMSForum/internal/pkg/middlewares"
+	postDelivery "DBMSForum/internal/pkg/post/delivery"
+	usecase2 "DBMSForum/internal/pkg/post/usecase"
+	serviceDelivery "DBMSForum/internal/pkg/service/delivery"
+	threadDelivery "DBMSForum/internal/pkg/thread/delivery"
+	userDelivery "DBMSForum/internal/pkg/user/delivery"
 	"database/sql"
 	"fmt"
 	"github.com/fasthttp/router"
@@ -17,6 +22,7 @@ import (
 // REQUIRES POSTGRES DRIVER IN IMPORT
 func getPostgres() (*sql.DB, error) {
 	dsn := "user=dbmsmaster dbname=dbmsforum password=dbms host=127.0.0.1 port=5432 sslmode=disable"
+	log.Info("Connecting postgres")
 	db, err := sql.Open("pgx", dsn)
 	if err != nil {
 		log.Fatalln("cant parse config", err)
@@ -24,7 +30,7 @@ func getPostgres() (*sql.DB, error) {
 	}
 	err = db.Ping() // вот тут будет первое подключение к базе
 	if err != nil {
-		log.Fatalln(err)
+		log.WithError(err).Fatal("Postgres connection error")
 		return nil, err
 	}
 	db.SetMaxOpenConns(10)
@@ -40,7 +46,13 @@ func RunServer(addr string) {
 		return
 	}
 	forumUsecase := usecase.NewForumUsecase(db)
-	delivery.NewForumHandler(r, forumUsecase)
+	postUsecase := usecase2.NewPostUsecase(db)
+
+	forumDelivery.NewForumHandler(r, forumUsecase)
+	postDelivery.NewPostHandler(r, postUsecase)
+	threadDelivery.NewThreadHandler(r)
+	serviceDelivery.NewServiceHandler(r)
+	userDelivery.NewUserHandler(r)
 
 	log.Println("Listening at: ", addr)
 	err = fasthttp.ListenAndServe(addr, middlewares.Logging(r.Handler))

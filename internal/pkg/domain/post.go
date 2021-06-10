@@ -10,3 +10,8 @@ type Post struct {
 	Thread   string
 	Created  string
 }
+
+type PostUsecase interface {
+	GetDetails(id int64, relatedUser bool, relatedForum bool, relatedThread bool) (*Post, error)
+	UpdateDetails(id int64, postUpdate Post) (*Post, error)
+}

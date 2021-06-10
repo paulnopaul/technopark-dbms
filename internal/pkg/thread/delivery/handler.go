@@ -1,16 +1,20 @@
 package delivery
 
 import (
+	"DBMSForum/internal/pkg/domain"
 	"github.com/fasthttp/router"
 	"github.com/valyala/fasthttp"
 	"net/http"
 )
 
 type threadHandler struct {
+	threadUsecase domain.ThreadUsecase
 }
 
-func NewThreadHandler(r *router.Router) {
-	h := threadHandler{}
+func NewThreadHandler(r *router.Router, tu domain.ThreadUsecase) {
+	h := threadHandler{
+		threadUsecase: tu,
+	}
 	s := r.Group("/thread")
 
 	s.POST("/{slug_or_id}/create", h.threadCreateHandler)

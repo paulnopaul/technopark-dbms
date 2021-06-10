@@ -2,8 +2,10 @@ package delivery
 
 import (
 	"DBMSForum/internal/pkg/domain"
-	"fmt"
+	"DBMSForum/internal/pkg/errors"
+	"encoding/json"
 	"github.com/fasthttp/router"
+	log "github.com/sirupsen/logrus"
 	"github.com/valyala/fasthttp"
 	"net/http"
 )
@@ -21,7 +23,7 @@ func NewForumHandler(r *router.Router, fu domain.ForumManager) {
 	s.POST("/create", h.forumCreateHandler)
 
 	s.GET("/{slug}/details", h.forumDetailsHandler)
-	s.POST("/{slug}/create", h.forumCreateThreadHanlder)
+	s.POST("/{slug}/create", h.forumCreateThreadHandler)
 	s.GET("/{slug}/users", h.forumGetUsersHandler)
 	s.GET("/{slug}/threads", h.forumGetThreadsHandler)
 }
@@ -34,31 +36,133 @@ curl --header "Content-Type: application/json" \
 http://localhost:5000/forum/create
 */
 func (handler *forumHandler) forumCreateHandler(ctx *fasthttp.RequestCtx) {
-	body := ctx.PostBody()
-	fmt.Println(string(body))
-	ctx.SetStatusCode(http.StatusOK)
+	parsedForum := &domain.Forum{}
+	err := json.Unmarshal(ctx.PostBody(), parsedForum)
+	if err != nil {
+		log.WithError(err).Error(errors.JSONUnmarshallError)
+		ctx.Error(errors.JSONDecodeErrorMessage, fasthttp.StatusInternalServerError)
+		return
+	}
+
+	createdForum, err := handler.forumUsecase.Create(*parsedForum)
+	if err != nil {
+		log.WithError(err).Error("forum creation error")
+		// TODO error + message
+		return
+	}
+
+	if err = json.NewEncoder(ctx).Encode(createdForum); err != nil {
+		log.WithError(err).Error(errors.JSONEncodeError)
+		ctx.Error(errors.JSONEncodeErrorMessage, fasthttp.StatusInternalServerError)
+		return
+	}
+
+	ctx.SetStatusCode(http.StatusCreated)
 }
 
 func (handler *forumHandler) forumDetailsHandler(ctx *fasthttp.RequestCtx) {
-	slugValue := ctx.UserValue("slug")
-	fmt.Println(slugValue)
+	slugValue := ctx.UserValue("slug").(string)
+	// TODO check slug function (maybe in middlewares)
+
+	forumDetails, err := handler.forumUsecase.Details(slugValue)
+	if err != nil {
+		log.WithError(err).Error("forum get details error")
+		// todo error + message
+		return
+	}
+
+	if err = json.NewEncoder(ctx).Encode(forumDetails); err != nil {
+		log.WithError(err).Error(errors.JSONEncodeError)
+		ctx.Error(errors.JSONEncodeErrorMessage, fasthttp.StatusInternalServerError)
+		return
+	}
+
 	ctx.SetStatusCode(http.StatusOK)
 }
 
-func (handler *forumHandler) forumCreateThreadHanlder(ctx *fasthttp.RequestCtx) {
-	slugValue := ctx.UserValue("slug")
-	fmt.Println(slugValue)
+func (handler *forumHandler) forumCreateThreadHandler(ctx *fasthttp.RequestCtx) {
+	slugValue := ctx.UserValue("slug").(string)
+	parsedThread := &domain.Thread{}
+	err := json.Unmarshal(ctx.PostBody(), parsedThread)
+	if err != nil {
+		log.WithError(err).Error(errors.JSONUnmarshallError)
+		ctx.Error(errors.JSONDecodeErrorMessage, fasthttp.StatusInternalServerError)
+		return
+	}
+
+	createdThread, err := handler.forumUsecase.CreateThread(slugValue, *parsedThread)
+	if err != nil {
+		log.WithError(err).Error("forum create thread error")
+		// todo error + message
+		return
+	}
+
+	if err = json.NewEncoder(ctx).Encode(createdThread); err != nil {
+		log.WithError(err).Error(errors.JSONEncodeError)
+		ctx.Error(errors.JSONEncodeErrorMessage, fasthttp.StatusInternalServerError)
+		return
+	}
+
 	ctx.SetStatusCode(http.StatusOK)
+}
+
+func parseLimitSinceDesc(queryArgs *fasthttp.Args) (limit int32, since string, desc bool, err error) {
+	parsedLimit, err := queryArgs.GetUint("limit")
+	if err != nil {
+		return
+	}
+	limit = int32(parsedLimit)
+	since = string(queryArgs.Peek("limit"))
+	desc = queryArgs.GetBool("desc")
+	return
 }
 
 func (handler *forumHandler) forumGetUsersHandler(ctx *fasthttp.RequestCtx) {
-	slugValue := ctx.UserValue("slug")
-	fmt.Println(slugValue)
+	slugValue := ctx.UserValue("slug").(string)
+	limit, since, desc, err := parseLimitSinceDesc(ctx.URI().QueryArgs())
+	if err != nil {
+		log.WithError(err).Error(errors.QuerystringParseError)
+		ctx.Error(errors.JSONQuerystringErrorMessage, errors.CodeFromJSONMessage(errors.JSONQuerystringErrorMessage))
+		return
+	}
+
+	foundUsers, err := handler.forumUsecase.Users(slugValue, limit, since, desc)
+	if err != nil {
+		log.WithError(err).Error("forum get users error")
+		// todo error + message
+		return
+	}
+
+	if err = json.NewEncoder(ctx).Encode(foundUsers); err != nil {
+		log.WithError(err).Error(errors.JSONEncodeError)
+		ctx.Error(errors.JSONEncodeErrorMessage, fasthttp.StatusInternalServerError)
+		return
+	}
+
 	ctx.SetStatusCode(http.StatusOK)
 }
 
 func (handler *forumHandler) forumGetThreadsHandler(ctx *fasthttp.RequestCtx) {
-	slugValue := ctx.UserValue("slug")
-	fmt.Println(slugValue)
+	slugValue := ctx.UserValue("slug").(string)
+	limit, since, desc, err := parseLimitSinceDesc(ctx.URI().QueryArgs())
+	if err != nil {
+		log.WithError(err).Error(errors.QuerystringParseError)
+		ctx.Error(errors.JSONQuerystringErrorMessage, errors.CodeFromJSONMessage(errors.JSONQuerystringErrorMessage))
+		return
+	}
+
+	foundUsers, err := handler.forumUsecase.Threads(slugValue, limit, since, desc)
+	if err != nil {
+		log.WithError(err).Error("forum get users error")
+		// todo error + message
+		return
+	}
+
+	if err = json.NewEncoder(ctx).Encode(foundUsers); err != nil {
+		log.WithError(err).Error(errors.JSONEncodeError)
+		ctx.Error(errors.JSONEncodeErrorMessage, fasthttp.StatusInternalServerError)
+		return
+	}
+
 	ctx.SetStatusCode(http.StatusOK)
 }
