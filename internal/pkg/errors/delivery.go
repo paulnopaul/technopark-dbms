@@ -33,6 +33,7 @@ var (
 	JSONEncodeError       = errors.New("json encode error")
 	QuerystringParseError = errors.New("querystring parsing error")
 	URLParamsError        = errors.New("url params error")
+	WrongSortType         = errors.New("wrong sort type")
 )
 
 func CodeFromDeliveryError(deliveryError error) int {

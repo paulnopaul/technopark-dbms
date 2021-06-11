@@ -3,6 +3,7 @@ package delivery
 import (
 	"DBMSForum/internal/pkg/domain"
 	"DBMSForum/internal/pkg/errors"
+	"DBMSForum/internal/pkg/utilities"
 	"encoding/json"
 	"github.com/fasthttp/router"
 	log "github.com/sirupsen/logrus"
@@ -11,10 +12,10 @@ import (
 )
 
 type forumHandler struct {
-	forumUsecase domain.ForumManager
+	forumUsecase domain.ForumUsecase
 }
 
-func NewForumHandler(r *router.Router, fu domain.ForumManager) {
+func NewForumHandler(r *router.Router, fu domain.ForumUsecase) {
 	h := forumHandler{
 		forumUsecase: fu,
 	}
@@ -106,27 +107,16 @@ func (handler *forumHandler) forumCreateThreadHandler(ctx *fasthttp.RequestCtx) 
 	ctx.SetStatusCode(http.StatusOK)
 }
 
-func parseLimitSinceDesc(queryArgs *fasthttp.Args) (limit int32, since string, desc bool, err error) {
-	parsedLimit, err := queryArgs.GetUint("limit")
-	if err != nil {
-		return
-	}
-	limit = int32(parsedLimit)
-	since = string(queryArgs.Peek("limit"))
-	desc = queryArgs.GetBool("desc")
-	return
-}
-
 func (handler *forumHandler) forumGetUsersHandler(ctx *fasthttp.RequestCtx) {
 	slugValue := ctx.UserValue("slug").(string)
-	limit, since, desc, err := parseLimitSinceDesc(ctx.URI().QueryArgs())
+	params, err := utilities.NewArrayOutParams(ctx.QueryArgs())
 	if err != nil {
 		log.WithError(err).Error(errors.QuerystringParseError)
 		ctx.Error(errors.JSONQuerystringErrorMessage, errors.CodeFromJSONMessage(errors.JSONQuerystringErrorMessage))
 		return
 	}
 
-	foundUsers, err := handler.forumUsecase.Users(slugValue, limit, since, desc)
+	foundUsers, err := handler.forumUsecase.Users(slugValue, *params)
 	if err != nil {
 		log.WithError(err).Error("forum get users error")
 		// todo error + message
@@ -144,14 +134,14 @@ func (handler *forumHandler) forumGetUsersHandler(ctx *fasthttp.RequestCtx) {
 
 func (handler *forumHandler) forumGetThreadsHandler(ctx *fasthttp.RequestCtx) {
 	slugValue := ctx.UserValue("slug").(string)
-	limit, since, desc, err := parseLimitSinceDesc(ctx.URI().QueryArgs())
+	params, err := utilities.NewArrayOutParams(ctx.URI().QueryArgs())
 	if err != nil {
 		log.WithError(err).Error(errors.QuerystringParseError)
 		ctx.Error(errors.JSONQuerystringErrorMessage, errors.CodeFromJSONMessage(errors.JSONQuerystringErrorMessage))
 		return
 	}
 
-	foundUsers, err := handler.forumUsecase.Threads(slugValue, limit, since, desc)
+	foundUsers, err := handler.forumUsecase.Threads(slugValue, *params)
 	if err != nil {
 		log.WithError(err).Error("forum get users error")
 		// todo error + message

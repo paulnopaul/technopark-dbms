@@ -2,13 +2,16 @@ package app
 
 import (
 	forumDelivery "DBMSForum/internal/pkg/forum/delivery"
-	"DBMSForum/internal/pkg/forum/usecase"
+	forumDBUsecase "DBMSForum/internal/pkg/forum/usecase"
 	"DBMSForum/internal/pkg/middlewares"
 	postDelivery "DBMSForum/internal/pkg/post/delivery"
-	usecase2 "DBMSForum/internal/pkg/post/usecase"
+	postDBUsecase "DBMSForum/internal/pkg/post/usecase"
 	serviceDelivery "DBMSForum/internal/pkg/service/delivery"
+	serviceDBUsecase "DBMSForum/internal/pkg/service/usecase"
 	threadDelivery "DBMSForum/internal/pkg/thread/delivery"
+	threadDBUsecase "DBMSForum/internal/pkg/thread/usecase"
 	userDelivery "DBMSForum/internal/pkg/user/delivery"
+	userDBUsecase "DBMSForum/internal/pkg/user/usecase"
 	"database/sql"
 	"fmt"
 	"github.com/fasthttp/router"
@@ -45,14 +48,18 @@ func RunServer(addr string) {
 		log.WithError(err).Error("Error while getting db")
 		return
 	}
-	forumUsecase := usecase.NewForumUsecase(db)
-	postUsecase := usecase2.NewPostUsecase(db)
+
+	forumUsecase := forumDBUsecase.NewForumUsecase(db)
+	postUsecase := postDBUsecase.NewPostUsecase(db)
+	threadUsecase := threadDBUsecase.NewThreadUsecase(db)
+	serviceUsecase := serviceDBUsecase.NewServiceUsecase(db)
+	userUsecase := userDBUsecase.NewUserUsecase(db)
 
 	forumDelivery.NewForumHandler(r, forumUsecase)
 	postDelivery.NewPostHandler(r, postUsecase)
-	threadDelivery.NewThreadHandler(r)
-	serviceDelivery.NewServiceHandler(r)
-	userDelivery.NewUserHandler(r)
+	threadDelivery.NewThreadHandler(r, threadUsecase)
+	serviceDelivery.NewServiceHandler(r, serviceUsecase)
+	userDelivery.NewUserHandler(r, userUsecase)
 
 	log.Println("Listening at: ", addr)
 	err = fasthttp.ListenAndServe(addr, middlewares.Logging(r.Handler))

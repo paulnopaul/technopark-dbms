@@ -32,7 +32,7 @@ create table f_t
     t_id   integer          not null,
     constraint forum_fk foreign key (f_slug) references forums (slug),
     constraint thread_fk foreign key (t_id) references threads (id),
-    constraint uniq_pair unique (f_slug, t_id)
+    constraint unique_forum_thread_pair unique (f_slug, t_id)
 );
 
 drop table if exists users cascade;
@@ -45,4 +45,16 @@ create table users
     email    varchar(:strLen) not null,
     constraint unique_user_nickname unique (nickname),
     constraint user_pk_id primary key (id)
-)
+);
+
+drop table if exists f_u cascade;
+create table f_u
+(
+    f_slug varchar(:strLen) not null,
+    u_nick varchar(:strLen) not null,
+    constraint forum_fk foreign key (f_slug) references forums (slug),
+    constraint user_fk foreign key (u_nick) references users (nickname),
+    constraint unique_user_forum_pair unique (f_slug, u_nick)
+);
+
+

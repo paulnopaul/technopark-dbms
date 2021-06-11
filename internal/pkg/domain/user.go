@@ -12,4 +12,3 @@ type UserUsecase interface {
 	GetProfile(nickname string) (*User, error)
 	UpdateProfile(nickname string, profileUpdate User) (*User, error)
 }
-
