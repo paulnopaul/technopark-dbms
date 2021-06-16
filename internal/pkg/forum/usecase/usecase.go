@@ -6,7 +6,10 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	sq "github.com/Masterminds/squirrel"
 )
+
+var psql = sq.StatementBuilder.PlaceholderFormat(sq.Dollar)
 
 type forumUsecase struct {
 	DB *sql.DB
@@ -59,10 +62,10 @@ func (u *forumUsecase) CreateThread(slug string, t domain.Thread) (*domain.Threa
 
 func (u *forumUsecase) Users(slug string, params utilities.ArrayOutParams) ([]domain.User, error) {
 	getForumUsersQuery := "select nickname, fullname, about, email from f_u join users u on f_u.u_nick = u.nickname where f_u.f_slug = $1 and u.nickname > $2 order by u_nick %s limit $3;"
+
 	if params.Desc {
 		getForumUsersQuery = fmt.Sprintf(getForumUsersQuery, "desc")
 	} else {
-		getForumUsersQuery = fmt.Sprintf(getForumUsersQuery, "")
 	}
 	u.DB.Query(getForumUsersQuery, slug, params.Since, params.Limit)
 	return nil, nil

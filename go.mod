@@ -3,6 +3,7 @@ module DBMSForum
 go 1.16
 
 require (
+	github.com/Masterminds/squirrel v1.5.0
 	github.com/cockroachdb/apd v1.1.0 // indirect
 	github.com/fasthttp/router v1.3.14
 	github.com/gofrs/uuid v4.0.0+incompatible // indirect
