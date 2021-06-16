@@ -38,13 +38,11 @@ create table f_t
 drop table if exists users cascade;
 create table users
 (
-    id       serial           not null,
-    nickname varchar(:strLen),
-    fullname varchar(:strLen),
+    nickname varchar(:strLen) not null,
+    fullname varchar(:strLen) not null,
     about    text,
     email    varchar(:strLen) not null,
-    constraint unique_user_nickname unique (nickname),
-    constraint user_pk_id primary key (id)
+    constraint user_pk_nickname primary key (nickname);
 );
 
 drop table if exists f_u cascade;
@@ -57,4 +55,5 @@ create table f_u
     constraint unique_user_forum_pair unique (f_slug, u_nick)
 );
 
-
+-- fill tables
+-- \i fill.sql

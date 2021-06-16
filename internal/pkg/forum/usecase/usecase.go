@@ -5,7 +5,6 @@ import (
 	"DBMSForum/internal/pkg/utilities"
 	"database/sql"
 	"errors"
-	"fmt"
 	sq "github.com/Masterminds/squirrel"
 )
 
@@ -60,17 +59,49 @@ func (u *forumUsecase) CreateThread(slug string, t domain.Thread) (*domain.Threa
 	return newT, nil
 }
 
-func (u *forumUsecase) Users(slug string, params utilities.ArrayOutParams) ([]domain.User, error) {
-	getForumUsersQuery := "select nickname, fullname, about, email from f_u join users u on f_u.u_nick = u.nickname where f_u.f_slug = $1 and u.nickname > $2 order by u_nick %s limit $3;"
-
-	if params.Desc {
-		getForumUsersQuery = fmt.Sprintf(getForumUsersQuery, "desc")
-	} else {
+func generateUserRequest(slug string, params utilities.ArrayOutParams) (string, []interface{}, error) {
+	req := psql.Select("nickname", "fullname", "about", "email").From("f_u").Join("users on f_u.u.nick = u.nickname").Where(sq.Eq{"f_u.f_slug": slug})
+	if params.Since != "" {
+		req = req.Where(sq.Gt{"nickname": params.Since})
 	}
-	u.DB.Query(getForumUsersQuery, slug, params.Since, params.Limit)
-	return nil, nil
+	if params.HasLimit {
+		req = req.Limit(uint64(params.Limit))
+	}
+	if params.Desc {
+		req = req.OrderBy("nickname desc")
+	} else {
+		req = req.OrderBy("nickname")
+	}
+	return req.ToSql()
+}
+
+func (u *forumUsecase) Users(slug string, params utilities.ArrayOutParams) ([]domain.User, error) {
+	getForumUsersQuery, args, err := generateUserRequest(slug, params)
+	if err != nil {
+		return nil, errors.New("request creating error")
+	}
+
+	rows, err := u.DB.Query(getForumUsersQuery, args...)
+	if err != nil {
+		return nil, errors.New("database query error")
+	}
+	defer rows.Close()
+
+	resUsers := make([]domain.User, 0)
+	for rows.Next() {
+		var currentUser domain.User
+		if err = rows.Scan(&currentUser.Nickname,
+			&currentUser.Fullname,
+			&currentUser.About,
+			&currentUser.Email); err != nil {
+			return nil, errors.New("row scan error")
+		}
+		resUsers = append(resUsers, currentUser)
+	}
+
+	return resUsers, nil
 }
 
 func (u *forumUsecase) Threads(slug string, params utilities.ArrayOutParams) ([]domain.Thread, error) {
-	return nil, errors.New("unimplemented")
+
 }
