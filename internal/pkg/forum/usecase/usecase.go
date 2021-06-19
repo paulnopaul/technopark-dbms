@@ -103,5 +103,5 @@ func (u *forumUsecase) Users(slug string, params utilities.ArrayOutParams) ([]do
 }
 
 func (u *forumUsecase) Threads(slug string, params utilities.ArrayOutParams) ([]domain.Thread, error) {
-
+	return nil, nil
 }

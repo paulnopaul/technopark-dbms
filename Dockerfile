@@ -1,4 +1,4 @@
-FROM golang:1.15.2-buster AS build
+FROM golang:1.16.5-buster AS build
 
 # Копируем исходный код в Docker-контейнер
 ADD ./ /opt/server
@@ -8,11 +8,8 @@ ENV GO111MODULE=on
 
 WORKDIR /opt/build/golang
 RUN go mod tidy
-RUN go install ./vendor/github.com/go-swagger/go-swagger/cmd/swagger
-RUN go install ./vendor/github.com/jteeuwen/go-bindata/go-bindata
 
 # generate and install packages
-RUN go generate -x tools.go
 RUN go install ./cmd/hello-server
 
 FROM ubuntu:20.04 AS release
