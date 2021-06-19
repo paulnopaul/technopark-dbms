@@ -1,7 +1,7 @@
 package domain
 
 import (
-	"DBMSForum/internal/pkg/utilities"
+	"technopark-dbms/internal/pkg/utilities"
 )
 
 type Thread struct {

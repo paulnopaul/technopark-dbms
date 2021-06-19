@@ -10,7 +10,7 @@ WORKDIR /opt/build/golang
 RUN go mod tidy
 
 # generate and install packages
-RUN go install ./cmd/hello-server
+RUN go install ./cmd/forum
 
 FROM ubuntu:20.04 AS release
 
@@ -22,7 +22,7 @@ RUN update-locale LANG=en_US.UTF-8
 #
 # Install postgresql
 #
-ENV PGVER 12
+ENV PGVER 13
 ENV DEBIAN_FRONTEND noninteractive
 RUN apt-get update -y && apt-get install -y postgresql postgresql-contrib
 
@@ -32,8 +32,8 @@ USER postgres
 # Create a PostgreSQL role named ``docker`` with ``docker`` as the password and
 # then create a database `docker` owned by the ``docker`` role.
 RUN /etc/init.d/postgresql start &&\
-    psql --command "CREATE USER docker WITH SUPERUSER PASSWORD 'docker';" &&\
-    createdb -O docker docker &&\
+    psql --command "CREATE USER dbmsmaster WITH SUPERUSER PASSWORD 'dbms';" &&\
+    createdb -O dbmsmaster dbmsforum &&\
     /etc/init.d/postgresql stop
 
 # Adjust PostgreSQL configuration so that remote connections to the
@@ -56,9 +56,9 @@ USER root
 EXPOSE 5000
 
 # Собранный ранее сервер
-COPY --from=build go/bin/hello-server /usr/bin/
+COPY --from=build go/bin/forum /usr/bin/
 
 #
 # Запускаем PostgreSQL и сервер
 #
-CMD service postgresql start && hello-server --scheme=http --port=5000 --host=0.0.0.0 --database=postgres://docker:docker@localhost/docker
+CMD service postgresql start && forum

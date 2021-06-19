@@ -1,4 +1,4 @@
-module DBMSForum
+module technopark-dbms
 
 go 1.16
 

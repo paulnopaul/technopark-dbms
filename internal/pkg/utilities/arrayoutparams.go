@@ -1,7 +1,7 @@
 package utilities
 
 import (
-	"DBMSForum/internal/pkg/errors"
+	"technopark-dbms/internal/pkg/errors"
 	"github.com/valyala/fasthttp"
 )
 

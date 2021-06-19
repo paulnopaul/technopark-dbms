@@ -1,6 +1,6 @@
 package domain
 
-import "DBMSForum/internal/pkg/utilities"
+import "technopark-dbms/internal/pkg/utilities"
 
 type Forum struct {
 	Title   string

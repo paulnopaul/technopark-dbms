@@ -1,7 +1,7 @@
 package delivery
 
 import (
-	"DBMSForum/internal/pkg/domain"
+	"technopark-dbms/internal/pkg/domain"
 	"github.com/fasthttp/router"
 	"github.com/valyala/fasthttp"
 	"net/http"

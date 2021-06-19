@@ -1,9 +1,9 @@
 package delivery
 
 import (
-	"DBMSForum/internal/pkg/domain"
-	"DBMSForum/internal/pkg/errors"
-	"DBMSForum/internal/pkg/utilities"
+	"technopark-dbms/internal/pkg/domain"
+	"technopark-dbms/internal/pkg/errors"
+	"technopark-dbms/internal/pkg/utilities"
 	"encoding/json"
 	"github.com/fasthttp/router"
 	log "github.com/sirupsen/logrus"

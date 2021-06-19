@@ -1,7 +1,7 @@
 package usecase
 
 import (
-	"DBMSForum/internal/pkg/domain"
+	"technopark-dbms/internal/pkg/domain"
 	"database/sql"
 )
 
