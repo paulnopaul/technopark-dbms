@@ -1,6 +1,11 @@
 package app
 
 import (
+	"database/sql"
+	"fmt"
+	"github.com/fasthttp/router"
+	log "github.com/sirupsen/logrus"
+	"github.com/valyala/fasthttp"
 	forumDelivery "technopark-dbms/internal/pkg/forum/delivery"
 	forumDBUsecase "technopark-dbms/internal/pkg/forum/usecase"
 	"technopark-dbms/internal/pkg/middlewares"
@@ -12,11 +17,6 @@ import (
 	threadDBUsecase "technopark-dbms/internal/pkg/thread/usecase"
 	userDelivery "technopark-dbms/internal/pkg/user/delivery"
 	userDBUsecase "technopark-dbms/internal/pkg/user/usecase"
-	"database/sql"
-	"fmt"
-	"github.com/fasthttp/router"
-	log "github.com/sirupsen/logrus"
-	"github.com/valyala/fasthttp"
 
 	// HERE MUST BE POSTGRES DRIVER
 	_ "github.com/jackc/pgx/stdlib"

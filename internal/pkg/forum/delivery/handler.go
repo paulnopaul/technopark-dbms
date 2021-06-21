@@ -1,14 +1,14 @@
 package delivery
 
 import (
-	"technopark-dbms/internal/pkg/domain"
-	"technopark-dbms/internal/pkg/errors"
-	"technopark-dbms/internal/pkg/utilities"
 	"encoding/json"
 	"github.com/fasthttp/router"
 	log "github.com/sirupsen/logrus"
 	"github.com/valyala/fasthttp"
 	"net/http"
+	"technopark-dbms/internal/pkg/domain"
+	"technopark-dbms/internal/pkg/errors"
+	"technopark-dbms/internal/pkg/utilities"
 )
 
 type forumHandler struct {
@@ -37,6 +37,7 @@ curl --header "Content-Type: application/json" \
 http://localhost:5000/forum/create
 */
 func (handler *forumHandler) forumCreateHandler(ctx *fasthttp.RequestCtx) {
+	log.Info("its create")
 	parsedForum := &domain.Forum{}
 	err := json.Unmarshal(ctx.PostBody(), parsedForum)
 	if err != nil {

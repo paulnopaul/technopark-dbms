@@ -6,7 +6,7 @@ ADD ./ /opt/server
 # Собираем генераторы
 ENV GO111MODULE=on
 
-WORKDIR /opt/build/golang
+WORKDIR /opt/server/
 RUN go mod tidy
 
 # generate and install packages
@@ -22,18 +22,25 @@ RUN update-locale LANG=en_US.UTF-8
 #
 # Install postgresql
 #
-ENV PGVER 13
+ENV PGVER 12
 ENV DEBIAN_FRONTEND noninteractive
 RUN apt-get update -y && apt-get install -y postgresql postgresql-contrib
 
 # Run the rest of the commands as the ``postgres`` user created by the ``postgres-$PGVER`` package when it was ``apt-get installed``
 USER postgres
 
+
+ADD ./scripts/sql/postgres /var/forumsql
+RUN ls /var/forumsql
+
+ENV PGPASSWORD 'dbms'
+
 # Create a PostgreSQL role named ``docker`` with ``docker`` as the password and
 # then create a database `docker` owned by the ``docker`` role.
 RUN /etc/init.d/postgresql start &&\
-    psql --command "CREATE USER dbmsmaster WITH SUPERUSER PASSWORD 'dbms';" &&\
+    psql --command "CREATE USER dbmsmaster WITH PASSWORD 'dbms' SUPERUSER;" &&\
     createdb -O dbmsmaster dbmsforum &&\
+    psql -U postgres -d dbmsforum -a -f /var/forumsql/fill.sql &&\
     /etc/init.d/postgresql stop
 
 # Adjust PostgreSQL configuration so that remote connections to the
