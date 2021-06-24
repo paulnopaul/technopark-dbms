@@ -37,10 +37,17 @@ func (handler *userHandler) userCreateHandler(ctx *fasthttp.RequestCtx) {
 
 	nickname := ctx.UserValue("nickname").(string)
 
-	createdUser, err := handler.userUsecase.CreateUser(nickname, *parsedUser)
+	createdUser, err, alreadyCreatedUsers := handler.userUsecase.CreateUser(nickname, *parsedUser)
 	if err != nil {
 		log.WithError(err).Error("user creation error")
-		ctx.Error(errors.JSONErrorMessage(err), user.CodeFromError(err))
+		var errorMsg string
+		if err == user.AlreadyExistsError {
+			errorMsgBytes, _ := json.Marshal(alreadyCreatedUsers)
+			errorMsg = string(errorMsgBytes)
+		} else {
+			errorMsg = errors.JSONErrorMessage(err)
+		}
+		ctx.Error(errorMsg, user.CodeFromError(err))
 		return
 	}
 

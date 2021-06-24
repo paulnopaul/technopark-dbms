@@ -30,7 +30,8 @@ type Post struct {
 }
 
 type PostUsecase interface {
-	GetDetails(id int64, relatedUser bool, relatedForum bool, relatedThread bool) (*Post, error)
+	GetById(id int64) (*Post, error)
+	GetDetails(id int64, relatedUser bool, relatedForum bool, relatedThread bool) (*Post, *Forum, *Thread, *User, error)
 	UpdateDetails(id int64, postUpdate Post) (*Post, error)
 }
 
@@ -59,7 +60,7 @@ type Thread struct {
 
 type ThreadUsecase interface {
 	CreatePosts(s utilities.SlugOrId, posts []Post) ([]Post, error)
-	GetThreadDetails(s utilities.SlugOrId, useSlug bool) (*Thread, error)
+	GetThreadDetails(s utilities.SlugOrId) (*Thread, error)
 	UpdateThreadDetails(s utilities.SlugOrId, threadUpdate Thread) (*Thread, error)
 	GetThreadPosts(s utilities.SlugOrId, params utilities.ArrayOutParams) ([]Post, error)
 	VoteThread(s utilities.SlugOrId, vote Vote) (*Thread, error)
@@ -73,8 +74,9 @@ type User struct {
 }
 
 type UserUsecase interface {
-	CreateUser(nickname string, createData User) (*User, error)
+	CreateUser(nickname string, createData User) (*User, error, []User)
 	GetProfile(nickname string) (*User, error)
+	GetProfiles(nickname, email string) ([]User, error)
 	UpdateProfile(nickname string, profileUpdate User) (*User, error)
 	Exists(nickname string, email string) (bool, error)
 }

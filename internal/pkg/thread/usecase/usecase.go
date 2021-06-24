@@ -1,9 +1,9 @@
 package usecase
 
 import (
+	"database/sql"
 	"technopark-dbms/internal/pkg/domain"
 	"technopark-dbms/internal/pkg/utilities"
-	"database/sql"
 )
 
 type threadUsecase struct {
@@ -14,7 +14,7 @@ func (t threadUsecase) CreatePosts(s utilities.SlugOrId, posts []domain.Post) ([
 	panic("implement me")
 }
 
-func (t threadUsecase) GetThreadDetails(s utilities.SlugOrId, useSlug bool) (*domain.Thread, error) {
+func (t threadUsecase) GetThreadDetails(s utilities.SlugOrId) (*domain.Thread, error) {
 	panic("implement me")
 }
 

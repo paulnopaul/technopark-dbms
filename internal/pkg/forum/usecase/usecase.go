@@ -2,10 +2,8 @@ package usecase
 
 import (
 	"database/sql"
-	"errors"
 	sq "github.com/Masterminds/squirrel"
 	"technopark-dbms/internal/pkg/domain"
-	myerrors "technopark-dbms/internal/pkg/errors"
 	"technopark-dbms/internal/pkg/utilities"
 )
 
@@ -86,14 +84,14 @@ func generateUserRequest(slug string, params utilities.ArrayOutParams) (string, 
 }
 
 func (u *forumUsecase) Users(slug string, params utilities.ArrayOutParams) ([]domain.User, error) {
-	getForumUsersQuery, args, err := generateUserRequest(slug, params)
+	query, args, err := generateUserRequest(slug, params)
 	if err != nil {
-		return nil, myerrors.QueryCreatingError
+		return nil, err
 	}
 
-	rows, err := u.DB.Query(getForumUsersQuery, args...)
+	rows, err := u.DB.Query(query, args...)
 	if err != nil {
-		return nil, errors.New("database query error")
+		return nil, err
 	}
 	defer rows.Close()
 
@@ -104,7 +102,7 @@ func (u *forumUsecase) Users(slug string, params utilities.ArrayOutParams) ([]do
 			&currentUser.Fullname,
 			&currentUser.About,
 			&currentUser.Email); err != nil {
-			return nil, errors.New("row scan error")
+			return nil, err
 		}
 		resUsers = append(resUsers, currentUser)
 	}
@@ -132,12 +130,12 @@ func generateForumThreadsQuery(slug string, params utilities.ArrayOutParams) (st
 func (u *forumUsecase) Threads(slug string, params utilities.ArrayOutParams) ([]domain.Thread, error) {
 	getThreadsQuery, args, err := generateForumThreadsQuery(slug, params)
 	if err != nil {
-		return nil, myerrors.QueryCreatingError
+		return nil, err
 	}
 
 	rows, err := u.DB.Query(getThreadsQuery, args...)
 	if err != nil {
-		return nil, errors.New("database query error")
+		return nil, err
 	}
 	defer rows.Close()
 
@@ -145,7 +143,7 @@ func (u *forumUsecase) Threads(slug string, params utilities.ArrayOutParams) ([]
 	for rows.Next() {
 		var currentThread domain.Thread
 		if err = rows.Scan(); err != nil {
-			return nil, errors.New("row scan error")
+			return nil, err
 		}
 		resThreads = append(resThreads, currentThread)
 	}

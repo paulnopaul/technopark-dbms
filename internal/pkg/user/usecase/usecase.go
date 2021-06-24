@@ -2,15 +2,16 @@ package usecase
 
 import (
 	"database/sql"
+	"errors"
 	sq "github.com/Masterminds/squirrel"
 	"technopark-dbms/internal/pkg/domain"
-	myerrors "technopark-dbms/internal/pkg/errors"
 	"technopark-dbms/internal/pkg/user"
 )
 
 const (
 	createUserQuery      = "insert into users(nickname, fullname, about, email) values ($1, $2, $3, $4) returning nickname, fullname, about, email;"
-	getUserDetailsQuery  = "select nickname, fullname, about, email from users where nickname = $1"
+	getUserDetailsQuery  = "select nickname, fullname, about, email from users where nickname = $1;"
+	getUsersDetailsQuery = "select nickname, fullname, about, email from users where nickname = $1 or email = $2;"
 	checkUserExistsQuery = "select nickname from users where nickname = $1 or email = $2;"
 )
 
@@ -20,18 +21,46 @@ type userUsecase struct {
 	DB *sql.DB
 }
 
+func (u *userUsecase) GetProfiles(nickname, email string) ([]domain.User, error) {
+	query := getUsersDetailsQuery
+
+	rows, err := u.DB.Query(query, nickname, email)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	resUsers := make([]domain.User, 0)
+	for rows.Next() {
+		var currentUser domain.User
+		if err = rows.Scan(&currentUser.Nickname,
+			&currentUser.Fullname,
+			&currentUser.About,
+			&currentUser.Email); err != nil {
+			return nil, errors.New("row scan error")
+		}
+		resUsers = append(resUsers, currentUser)
+	}
+	if len(resUsers) == 0 {
+		return nil, user.NotExistsError
+	}
+
+	return resUsers, nil
+}
+
 func NewUserUsecase(db *sql.DB) domain.UserUsecase {
 	return &userUsecase{
 		DB: db,
 	}
 }
 
-func (u *userUsecase) CreateUser(nickname string, createData domain.User) (*domain.User, error) {
-	checkedUser, err := u.GetProfile(nickname)
+func (u *userUsecase) CreateUser(nickname string, createData domain.User) (*domain.User, error, []domain.User) {
+	// TODO add validation
+	checkedProfiles, err := u.GetProfiles(nickname, createData.Email)
 	if err == nil {
-		return checkedUser, user.AlreadyExistsError
-	} else if err != sql.ErrNoRows {
-		return nil, err
+		return nil, user.AlreadyExistsError, checkedProfiles
+	} else if err != user.NotExistsError {
+		return nil, err, nil
 	}
 
 	query := createUserQuery
@@ -39,9 +68,9 @@ func (u *userUsecase) CreateUser(nickname string, createData domain.User) (*doma
 	err = u.DB.QueryRow(query, nickname, createData.Fullname, createData.About, createData.Email).
 		Scan(&createdUser.Nickname, &createdUser.Fullname, &createdUser.About, &createdUser.Email)
 	if err != nil {
-		return nil, err
+		return nil, err, nil
 	}
-	return createdUser, err
+	return createdUser, err, nil
 }
 
 func (u *userUsecase) GetProfile(nickname string) (*domain.User, error) {
@@ -93,7 +122,7 @@ func (u *userUsecase) UpdateProfile(nickname string, profileUpdate domain.User) 
 
 	query, args, err := generateUpdateProfileRequest(nickname, profileUpdate)
 	if err != nil {
-		return nil, myerrors.QueryCreatingError
+		return nil, err
 	}
 	updatedUser := &domain.User{}
 	err = u.DB.QueryRow(query, args).
