@@ -1,13 +1,14 @@
 package delivery
 
 import (
-	"technopark-dbms/internal/pkg/domain"
-	"technopark-dbms/internal/pkg/errors"
 	"encoding/json"
 	"github.com/fasthttp/router"
 	log "github.com/sirupsen/logrus"
 	"github.com/valyala/fasthttp"
 	"net/http"
+	"technopark-dbms/internal/pkg/domain"
+	"technopark-dbms/internal/pkg/errors"
+	"technopark-dbms/internal/pkg/utilities"
 )
 
 type serviceHandler struct {
@@ -45,7 +46,7 @@ func (handler *serviceHandler) serviceStatusHandler(ctx *fasthttp.RequestCtx) {
 
 	if err = json.NewEncoder(ctx).Encode(status); err != nil {
 		log.WithError(err).Error(errors.JSONEncodeError)
-		ctx.Error(errors.JSONEncodeErrorMessage, fasthttp.StatusInternalServerError)
+		utilities.Resp(ctx, fasthttp.StatusInternalServerError, errors.JSONEncodeErrorMessage)
 		return
 	}
 

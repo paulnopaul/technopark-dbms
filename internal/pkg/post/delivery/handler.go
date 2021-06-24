@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"technopark-dbms/internal/pkg/domain"
 	"technopark-dbms/internal/pkg/errors"
+	"technopark-dbms/internal/pkg/utilities"
 )
 
 type postHandler struct {
@@ -41,7 +42,7 @@ func (handler *postHandler) postGetDetailsHandler(ctx *fasthttp.RequestCtx) {
 	postId, err := strconv.ParseInt(ctx.UserValue("id").(string), 10, 64)
 	if err != nil {
 		log.WithError(err).Error(errors.URLParamsError)
-		ctx.Error(errors.JSONURLParamsErrorMessage, errors.CodeFromJSONMessage(errors.JSONURLParamsErrorMessage))
+		utilities.Resp(ctx, errors.CodeFromDeliveryError(errors.URLParamsError), errors.JSONURLParamsErrorMessage)
 		return
 	}
 	userRelated, forumRelated, threadRelated := parseRelated(ctx.QueryArgs())
@@ -53,28 +54,29 @@ func (handler *postHandler) postGetDetailsHandler(ctx *fasthttp.RequestCtx) {
 		return
 	}
 
-	if err = json.NewEncoder(ctx).Encode(postFull{foundPost, foundForum, foundThread, foundUser}); err != nil {
+	body, err := json.Marshal(postFull{foundPost, foundForum, foundThread, foundUser})
+	if err != nil {
 		log.WithError(err).Error(errors.JSONEncodeError)
-		ctx.Error(errors.JSONEncodeErrorMessage, fasthttp.StatusInternalServerError)
+		utilities.Resp(ctx, http.StatusInternalServerError, errors.JSONEncodeErrorMessage)
 		return
 	}
 
-	ctx.SetStatusCode(http.StatusOK)
-
+	utilities.Resp(ctx, fasthttp.StatusOK, body)
 }
 
 func (handler *postHandler) postUpdateDetailsHandler(ctx *fasthttp.RequestCtx) {
 	postId, err := strconv.ParseInt(ctx.UserValue("id").(string), 10, 64)
 	if err != nil {
 		log.WithError(err).Error(errors.URLParamsError)
-		ctx.Error(errors.JSONURLParamsErrorMessage, errors.CodeFromJSONMessage(errors.JSONURLParamsErrorMessage))
+		utilities.Resp(ctx, errors.CodeFromDeliveryError(errors.URLParamsError), errors.JSONURLParamsErrorMessage)
 		return
 	}
+
 	parsedPost := &domain.Post{}
 	err = json.Unmarshal(ctx.PostBody(), parsedPost)
 	if err != nil {
 		log.WithError(err).Error(errors.JSONUnmarshallError)
-		ctx.Error(errors.JSONDecodeErrorMessage, fasthttp.StatusInternalServerError)
+		utilities.Resp(ctx, fasthttp.StatusInternalServerError, errors.JSONDecodeErrorMessage)
 		return
 	}
 
@@ -85,11 +87,11 @@ func (handler *postHandler) postUpdateDetailsHandler(ctx *fasthttp.RequestCtx) {
 		return
 	}
 
-	if err = json.NewEncoder(ctx).Encode(foundPost); err != nil {
+	body, err := json.Marshal(foundPost)
+	if err != nil {
 		log.WithError(err).Error(errors.JSONEncodeError)
-		ctx.Error(errors.JSONEncodeErrorMessage, fasthttp.StatusInternalServerError)
+		utilities.Resp(ctx, fasthttp.StatusInternalServerError, errors.JSONEncodeErrorMessage)
 		return
 	}
-
-	ctx.SetStatusCode(http.StatusCreated)
+	utilities.Resp(ctx, fasthttp.StatusCreated, body)
 }

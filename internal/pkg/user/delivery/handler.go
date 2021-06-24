@@ -9,6 +9,7 @@ import (
 	"technopark-dbms/internal/pkg/domain"
 	"technopark-dbms/internal/pkg/errors"
 	"technopark-dbms/internal/pkg/user"
+	"technopark-dbms/internal/pkg/utilities"
 )
 
 type userHandler struct {
@@ -31,7 +32,7 @@ func (handler *userHandler) userCreateHandler(ctx *fasthttp.RequestCtx) {
 	err := json.Unmarshal(ctx.PostBody(), parsedUser)
 	if err != nil {
 		log.WithError(err).Error(errors.JSONUnmarshallError)
-		ctx.Error(errors.JSONDecodeErrorMessage, fasthttp.StatusInternalServerError)
+		utilities.Resp(ctx, http.StatusBadRequest, errors.JSONDecodeErrorMessage)
 		return
 	}
 
@@ -40,43 +41,44 @@ func (handler *userHandler) userCreateHandler(ctx *fasthttp.RequestCtx) {
 	createdUser, err, alreadyCreatedUsers := handler.userUsecase.CreateUser(nickname, *parsedUser)
 	if err != nil {
 		log.WithError(err).Error("user creation error")
-		var errorMsg string
+		var errorMsg []byte
 		if err == user.AlreadyExistsError {
-			errorMsgBytes, _ := json.Marshal(alreadyCreatedUsers)
-			errorMsg = string(errorMsgBytes)
+			errorMsg, _ = json.Marshal(alreadyCreatedUsers)
 		} else {
 			errorMsg = errors.JSONErrorMessage(err)
 		}
-		ctx.Error(errorMsg, user.CodeFromError(err))
+		utilities.Resp(ctx, user.CodeFromError(err), errorMsg)
 		return
 	}
-
-	if err = json.NewEncoder(ctx).Encode(createdUser); err != nil {
+	body, err := json.Marshal(createdUser)
+	if err != nil {
 		log.WithError(err).Error(errors.JSONEncodeError)
-		ctx.Error(errors.JSONEncodeErrorMessage, fasthttp.StatusInternalServerError)
+		utilities.Resp(ctx, http.StatusInternalServerError, errors.JSONEncodeErrorMessage)
 		return
 	}
 
-	ctx.SetStatusCode(http.StatusCreated)
+	utilities.Resp(ctx, fasthttp.StatusCreated, body)
 }
 
 func (handler *userHandler) userGetProfileHandler(ctx *fasthttp.RequestCtx) {
 	nickname := ctx.UserValue("nickname").(string)
 
-	createdUser, err := handler.userUsecase.GetProfile(nickname)
+	foundUser, err := handler.userUsecase.GetProfile(nickname)
 	if err != nil {
 		log.WithError(err).Error("user get details error")
-		ctx.Error(errors.JSONErrorMessage(err), user.CodeFromError(err))
+		utilities.Resp(ctx, user.CodeFromError(err), errors.JSONErrorMessage(err))
 		return
 	}
 
-	if err = json.NewEncoder(ctx).Encode(createdUser); err != nil {
+	body, err := json.Marshal(foundUser)
+	if err != nil {
 		log.WithError(err).Error(errors.JSONEncodeError)
-		ctx.Error(errors.JSONEncodeErrorMessage, fasthttp.StatusInternalServerError)
+		utilities.Resp(ctx, fasthttp.StatusInternalServerError, errors.JSONEncodeErrorMessage)
 		return
 	}
 
-	ctx.SetStatusCode(http.StatusCreated)
+	ctx.Success("application/json", body)
+	ctx.SetStatusCode(http.StatusOK)
 }
 
 func (handler *userHandler) userUpdateProfileHandler(ctx *fasthttp.RequestCtx) {
@@ -84,24 +86,25 @@ func (handler *userHandler) userUpdateProfileHandler(ctx *fasthttp.RequestCtx) {
 	err := json.Unmarshal(ctx.PostBody(), parsedUser)
 	if err != nil {
 		log.WithError(err).Error(errors.JSONUnmarshallError)
-		ctx.Error(errors.JSONDecodeErrorMessage, fasthttp.StatusInternalServerError)
+		utilities.Resp(ctx, fasthttp.StatusInternalServerError, errors.JSONDecodeErrorMessage)
 		return
 	}
 
 	nickname := ctx.UserValue("nickname").(string)
 
-	createdUser, err := handler.userUsecase.UpdateProfile(nickname, *parsedUser)
+	updatedUser, err := handler.userUsecase.UpdateProfile(nickname, *parsedUser)
 	if err != nil {
-		log.WithError(err).Error("user updating error")
-		ctx.Error(errors.JSONErrorMessage(err), user.CodeFromError(err))
+		log.WithError(err).WithFields(log.Fields{"nickname": nickname}).Error("user updating error")
+		utilities.Resp(ctx, user.CodeFromError(err), errors.JSONErrorMessage(err))
 		return
 	}
 
-	if err = json.NewEncoder(ctx).Encode(createdUser); err != nil {
+	body, err := json.Marshal(updatedUser)
+	if err != nil {
 		log.WithError(err).Error(errors.JSONEncodeError)
-		ctx.Error(errors.JSONEncodeErrorMessage, fasthttp.StatusInternalServerError)
+		utilities.Resp(ctx, fasthttp.StatusInternalServerError, errors.JSONEncodeErrorMessage)
 		return
 	}
 
-	ctx.SetStatusCode(http.StatusOK)
+	utilities.Resp(ctx, fasthttp.StatusOK, body)
 }

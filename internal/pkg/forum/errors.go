@@ -6,8 +6,8 @@ import (
 )
 
 var (
-	AlreadyExists   = errors.New("query creating error")
-	AuthorNotExists = errors.New("query creating error")
+	AlreadyExists   = errors.New("forum already exists")
+	AuthorNotExists = errors.New("forum author does not exists")
 )
 
 func CodeFromError(err error) int {

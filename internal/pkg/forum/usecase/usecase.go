@@ -4,14 +4,16 @@ import (
 	"database/sql"
 	sq "github.com/Masterminds/squirrel"
 	"technopark-dbms/internal/pkg/domain"
+	"technopark-dbms/internal/pkg/forum"
 	"technopark-dbms/internal/pkg/utilities"
 )
 
 const (
 	createForumQuery     = "insert into forums(title, username, slug) values ($1, $2, $3) returning title, username, slug, posts, threads;"
-	getForumDetailsQuery = "select title, username, slug, posts, threads from forums where slug = $1"
+	forumExistsQuery     = "select slug from forums where slug = $1;"
+	getForumDetailsQuery = "select title, username, slug, posts, threads from forums where slug = $1;"
 	createThreadQuery    = "insert into threads(title, author, message) values ($1, $2, $3) returning id, title, author,  message, votes, created;"
-	createFTQuery        = "insert into f_t(f_slug, t_id) values ($1, $2)"
+	createFTQuery        = "insert into f_t(f_slug, t_id) values ($1, $2);"
 )
 
 var psql = sq.StatementBuilder.PlaceholderFormat(sq.Dollar)
@@ -21,16 +23,42 @@ type forumUsecase struct {
 	UUCase domain.UserUsecase
 }
 
-func NewForumUsecase(db *sql.DB) domain.ForumUsecase {
+func (u *forumUsecase) Exists(slug string) (bool, error) {
+	var foundSlug string
+	err := u.DB.QueryRow(forumExistsQuery, slug).Scan(&foundSlug)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return false, nil
+		}
+		return false, err
+	}
+	return true, nil
+}
+
+func NewForumUsecase(db *sql.DB, userUsecase domain.UserUsecase) domain.ForumUsecase {
 	return &forumUsecase{
-		DB: db,
+		DB:     db,
+		UUCase: userUsecase,
 	}
 }
 
 func (u *forumUsecase) CreateForum(f domain.Forum) (*domain.Forum, error) {
-	query := createForumQuery
+	authorExists, err := u.UUCase.Exists(f.User, "")
+	if err != nil {
+		return nil, err
+	} else if !authorExists {
+		return nil, forum.AuthorNotExists
+	}
+
+	foundForum, err := u.Details(f.Slug)
+	if err == nil {
+		return foundForum, forum.AlreadyExists
+	} else if err != sql.ErrNoRows {
+		return nil, err
+	}
+
 	createdForum := &domain.Forum{}
-	err := u.DB.QueryRow(query, f.Title, f.User, f.Slug).
+	err = u.DB.QueryRow(createForumQuery, f.Title, f.User, f.Slug).
 		Scan(&createdForum.Title, &createdForum.User, &createdForum.Slug, &createdForum.Posts, &createdForum.Threads)
 	if err != nil {
 		return nil, err
@@ -39,9 +67,8 @@ func (u *forumUsecase) CreateForum(f domain.Forum) (*domain.Forum, error) {
 }
 
 func (u *forumUsecase) Details(slug string) (*domain.Forum, error) {
-	query := getForumDetailsQuery
 	f := &domain.Forum{}
-	err := u.DB.QueryRow(query, slug).Scan(&f.Title, &f.User, &f.Slug, &f.Posts, &f.Threads)
+	err := u.DB.QueryRow(getForumDetailsQuery, slug).Scan(&f.Title, &f.User, &f.Slug, &f.Posts, &f.Threads)
 	if err != nil {
 		return nil, err
 	}
@@ -49,16 +76,13 @@ func (u *forumUsecase) Details(slug string) (*domain.Forum, error) {
 }
 
 func (u *forumUsecase) CreateThread(slug string, t domain.Thread) (*domain.Thread, error) {
-	query := createThreadQuery
-
 	newT := &domain.Thread{}
-	err := u.DB.QueryRow(query, t.Title, t.Author, t.Message, slug).Scan(&newT.ID, &newT.Title, &newT.Author, &newT.Message, &newT.Votes, &newT.Created)
+	err := u.DB.QueryRow(createThreadQuery, t.Title, t.Author, t.Message, slug).Scan(&newT.ID, &newT.Title, &newT.Author, &newT.Message, &newT.Votes, &newT.Created)
 	if err != nil {
 		return nil, err
 	}
 
-	query = createFTQuery
-	_, err = u.DB.Exec(query, slug, newT.ID)
+	_, err = u.DB.Exec(createFTQuery, slug, newT.ID)
 	if err != nil {
 		return nil, err
 	}

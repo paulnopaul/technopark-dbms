@@ -13,7 +13,9 @@ var (
 
 func CodeFromError(err error) int {
 	switch err {
-	case AlreadyExistsError, UpdateConflict:
+	case AlreadyExistsError:
+		return http.StatusConflict
+	case UpdateConflict:
 		return http.StatusConflict
 	case NotExistsError:
 		return http.StatusNotFound

@@ -3,15 +3,16 @@ package domain
 import "technopark-dbms/internal/pkg/utilities"
 
 type Forum struct {
-	Title   string
-	User    string
-	Slug    string
-	Posts   int64
-	Threads int64
+	Title   string `json:"title"`
+	User    string `json:"user"`
+	Slug    string `json:"slug"`
+	Posts   int64  `json:"posts,omitempty"`
+	Threads int64  `json:"threads,omitempty"`
 }
 
 type ForumUsecase interface {
 	CreateForum(f Forum) (*Forum, error)
+	Exists(slug string) (bool, error)
 	Details(slug string) (*Forum, error)
 	CreateThread(slug string, t Thread) (*Thread, error)
 	Users(slug string, params utilities.ArrayOutParams) ([]User, error)
@@ -67,10 +68,10 @@ type ThreadUsecase interface {
 }
 
 type User struct {
-	Nickname string
-	Fullname string
-	About    string
-	Email    string
+	Nickname string `json:"nickname,omitempty"`
+	Fullname string `json:"fullname,omitempty"`
+	About    string `json:"about,omitempty"`
+	Email    string `json:"email,omitempty"`
 }
 
 type UserUsecase interface {

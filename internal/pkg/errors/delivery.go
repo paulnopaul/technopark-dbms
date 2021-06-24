@@ -3,21 +3,22 @@ package errors
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 )
 
-func JSONMessage(m string) string {
-	res, _ := json.Marshal(struct {
-		message string
-	}{m})
-	return string(res)
+type JSONMessageType struct {
+	Message string `json:"message"`
 }
 
-func JSONErrorMessage(err error) string {
-	res, _ := json.Marshal(struct {
-		message error
-	}{err})
-	return string(res)
+func JSONMessage(m string) []byte {
+	res, _ := json.Marshal(JSONMessageType{m})
+	return res
+}
+
+func JSONErrorMessage(err error) []byte {
+	res, _ := json.Marshal(JSONMessageType{fmt.Sprint(err)})
+	return res
 }
 
 var (
@@ -26,17 +27,6 @@ var (
 	JSONURLParamsErrorMessage   = JSONMessage("url params")
 	JSONQuerystringErrorMessage = JSONMessage("querystring params")
 )
-
-func CodeFromJSONMessage(message string) int {
-	switch message {
-	case JSONEncodeErrorMessage, JSONURLParamsErrorMessage, JSONQuerystringErrorMessage:
-		return http.StatusBadRequest
-	case JSONDecodeErrorMessage:
-		return http.StatusInternalServerError
-	default:
-		return http.StatusInternalServerError
-	}
-}
 
 var (
 	JSONUnmarshallError   = errors.New("json unmarshall error")

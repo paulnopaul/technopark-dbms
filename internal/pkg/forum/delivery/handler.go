@@ -2,12 +2,14 @@ package delivery
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/fasthttp/router"
 	log "github.com/sirupsen/logrus"
 	"github.com/valyala/fasthttp"
 	"net/http"
 	"technopark-dbms/internal/pkg/domain"
 	"technopark-dbms/internal/pkg/errors"
+	"technopark-dbms/internal/pkg/forum"
 	"technopark-dbms/internal/pkg/utilities"
 )
 
@@ -41,24 +43,34 @@ func (handler *forumHandler) forumCreateHandler(ctx *fasthttp.RequestCtx) {
 	err := json.Unmarshal(ctx.PostBody(), parsedForum)
 	if err != nil {
 		log.WithError(err).Error(errors.JSONUnmarshallError)
-		ctx.Error(errors.JSONDecodeErrorMessage, fasthttp.StatusInternalServerError)
+		utilities.Resp(ctx, http.StatusBadRequest, errors.JSONDecodeErrorMessage)
 		return
 	}
 
 	createdForum, err := handler.forumUsecase.CreateForum(*parsedForum)
+	responseStatus := fasthttp.StatusCreated
 	if err != nil {
 		log.WithError(err).Error("forum creation error")
-		// TODO error + message
-		return
+		if err == forum.AlreadyExists {
+			responseStatus = fasthttp.StatusConflict
+		} else if err == forum.AuthorNotExists {
+			utilities.Resp(ctx, fasthttp.StatusNotFound,
+				errors.JSONMessage(fmt.Sprintf("Can't find user with nickname: %s", parsedForum.User)))
+			return
+		} else {
+			utilities.Resp(ctx, fasthttp.StatusInternalServerError, errors.JSONErrorMessage(err))
+			return
+		}
 	}
 
-	if err = json.NewEncoder(ctx).Encode(createdForum); err != nil {
+	body, err := json.Marshal(createdForum)
+	if err != nil {
 		log.WithError(err).Error(errors.JSONEncodeError)
-		ctx.Error(errors.JSONEncodeErrorMessage, fasthttp.StatusInternalServerError)
+		utilities.Resp(ctx, fasthttp.StatusInternalServerError, errors.JSONEncodeErrorMessage)
 		return
 	}
 
-	ctx.SetStatusCode(http.StatusCreated)
+	utilities.Resp(ctx, responseStatus, body)
 }
 
 func (handler *forumHandler) forumDetailsHandler(ctx *fasthttp.RequestCtx) {
@@ -72,13 +84,14 @@ func (handler *forumHandler) forumDetailsHandler(ctx *fasthttp.RequestCtx) {
 		return
 	}
 
-	if err = json.NewEncoder(ctx).Encode(forumDetails); err != nil {
+	body, err := json.Marshal(forumDetails)
+	if err != nil {
 		log.WithError(err).Error(errors.JSONEncodeError)
-		ctx.Error(errors.JSONEncodeErrorMessage, fasthttp.StatusInternalServerError)
+		utilities.Resp(ctx, fasthttp.StatusInternalServerError, errors.JSONEncodeErrorMessage)
 		return
 	}
 
-	ctx.SetStatusCode(http.StatusOK)
+	utilities.Resp(ctx, fasthttp.StatusOK, body)
 }
 
 func (handler *forumHandler) forumCreateThreadHandler(ctx *fasthttp.RequestCtx) {
@@ -87,7 +100,7 @@ func (handler *forumHandler) forumCreateThreadHandler(ctx *fasthttp.RequestCtx) 
 	err := json.Unmarshal(ctx.PostBody(), parsedThread)
 	if err != nil {
 		log.WithError(err).Error(errors.JSONUnmarshallError)
-		ctx.Error(errors.JSONDecodeErrorMessage, fasthttp.StatusInternalServerError)
+		utilities.Resp(ctx, http.StatusBadRequest, errors.JSONDecodeErrorMessage)
 		return
 	}
 
@@ -98,13 +111,14 @@ func (handler *forumHandler) forumCreateThreadHandler(ctx *fasthttp.RequestCtx) 
 		return
 	}
 
-	if err = json.NewEncoder(ctx).Encode(createdThread); err != nil {
+	body, err := json.Marshal(createdThread)
+	if err != nil {
 		log.WithError(err).Error(errors.JSONEncodeError)
-		ctx.Error(errors.JSONEncodeErrorMessage, fasthttp.StatusInternalServerError)
+		utilities.Resp(ctx, fasthttp.StatusInternalServerError, errors.JSONEncodeErrorMessage)
 		return
 	}
 
-	ctx.SetStatusCode(http.StatusOK)
+	utilities.Resp(ctx, fasthttp.StatusCreated, body)
 }
 
 func (handler *forumHandler) forumGetUsersHandler(ctx *fasthttp.RequestCtx) {
@@ -112,7 +126,7 @@ func (handler *forumHandler) forumGetUsersHandler(ctx *fasthttp.RequestCtx) {
 	params, err := utilities.NewArrayOutParams(ctx.QueryArgs())
 	if err != nil {
 		log.WithError(err).Error(errors.QuerystringParseError)
-		ctx.Error(errors.JSONQuerystringErrorMessage, errors.CodeFromJSONMessage(errors.JSONQuerystringErrorMessage))
+		utilities.Resp(ctx, errors.CodeFromDeliveryError(errors.QuerystringParseError), errors.JSONQuerystringErrorMessage)
 		return
 	}
 
@@ -125,7 +139,7 @@ func (handler *forumHandler) forumGetUsersHandler(ctx *fasthttp.RequestCtx) {
 
 	if err = json.NewEncoder(ctx).Encode(foundUsers); err != nil {
 		log.WithError(err).Error(errors.JSONEncodeError)
-		ctx.Error(errors.JSONEncodeErrorMessage, fasthttp.StatusInternalServerError)
+		utilities.Resp(ctx, http.StatusInternalServerError, errors.JSONEncodeErrorMessage)
 		return
 	}
 
@@ -137,7 +151,7 @@ func (handler *forumHandler) forumGetThreadsHandler(ctx *fasthttp.RequestCtx) {
 	params, err := utilities.NewArrayOutParams(ctx.URI().QueryArgs())
 	if err != nil {
 		log.WithError(err).Error(errors.QuerystringParseError)
-		ctx.Error(errors.JSONQuerystringErrorMessage, errors.CodeFromJSONMessage(errors.JSONQuerystringErrorMessage))
+		utilities.Resp(ctx, errors.CodeFromDeliveryError(errors.QuerystringParseError), errors.JSONQuerystringErrorMessage)
 		return
 	}
 
@@ -148,11 +162,12 @@ func (handler *forumHandler) forumGetThreadsHandler(ctx *fasthttp.RequestCtx) {
 		return
 	}
 
-	if err = json.NewEncoder(ctx).Encode(foundUsers); err != nil {
+	body, err := json.Marshal(foundUsers)
+	if err != nil {
 		log.WithError(err).Error(errors.JSONEncodeError)
-		ctx.Error(errors.JSONEncodeErrorMessage, fasthttp.StatusInternalServerError)
+		utilities.Resp(ctx, fasthttp.StatusInternalServerError, errors.JSONEncodeErrorMessage)
 		return
 	}
 
-	ctx.SetStatusCode(http.StatusOK)
+	utilities.Resp(ctx, fasthttp.StatusOK, body)
 }

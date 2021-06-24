@@ -49,11 +49,11 @@ func RunServer(addr string) {
 		return
 	}
 
-	forumUsecase := forumDBUsecase.NewForumUsecase(db)
 	postUsecase := postDBUsecase.NewPostUsecase(db)
 	threadUsecase := threadDBUsecase.NewThreadUsecase(db)
 	serviceUsecase := serviceDBUsecase.NewServiceUsecase(db)
 	userUsecase := userDBUsecase.NewUserUsecase(db)
+	forumUsecase := forumDBUsecase.NewForumUsecase(db, userUsecase)
 
 	forumDelivery.NewForumHandler(r, forumUsecase)
 	postDelivery.NewPostHandler(r, postUsecase)
