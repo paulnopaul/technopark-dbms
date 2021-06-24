@@ -1,13 +1,23 @@
 package errors
 
 import (
+	"encoding/json"
 	"errors"
-	"fmt"
 	"net/http"
 )
 
 func JSONMessage(m string) string {
-	return fmt.Sprintf(`{"message":"%s"}`, m)
+	res, _ := json.Marshal(struct {
+		message string
+	}{m})
+	return string(res)
+}
+
+func JSONErrorMessage(err error) string {
+	res, _ := json.Marshal(struct {
+		message error
+	}{err})
+	return string(res)
 }
 
 var (

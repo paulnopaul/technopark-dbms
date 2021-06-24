@@ -37,7 +37,6 @@ curl --header "Content-Type: application/json" \
 http://localhost:5000/forum/create
 */
 func (handler *forumHandler) forumCreateHandler(ctx *fasthttp.RequestCtx) {
-	log.Info("its create")
 	parsedForum := &domain.Forum{}
 	err := json.Unmarshal(ctx.PostBody(), parsedForum)
 	if err != nil {
@@ -46,7 +45,7 @@ func (handler *forumHandler) forumCreateHandler(ctx *fasthttp.RequestCtx) {
 		return
 	}
 
-	createdForum, err := handler.forumUsecase.Create(*parsedForum)
+	createdForum, err := handler.forumUsecase.CreateForum(*parsedForum)
 	if err != nil {
 		log.WithError(err).Error("forum creation error")
 		// TODO error + message
