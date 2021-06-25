@@ -23,8 +23,11 @@ create unlogged table forums
 drop table if exists f_u cascade;
 create unlogged table f_u
 (
-    f citext not null,
-    u citext not null,
+    f        citext        not null,
+    u        citext        not null,
+    fullname text          not null,
+    about    text,
+    email    citext unique not null,
     unique (f, u),
     foreign key (u) references users (nickname),
     foreign key (f) references forums (slug)
@@ -112,8 +115,10 @@ create or replace function new_thread_add_relation()
 $$
 begin
     --- update forum users
-    insert into f_u(f, u)
-    values (new.forum, new.author)
+    insert into f_u(f, u, fullname, about, email)
+    select new.forum, new.author, fullname, about, email
+    from users
+    where new.author = nickname
     on conflict do nothing;
     return null;
 end;
@@ -154,8 +159,10 @@ create or replace function new_post_add_relation()
 $$
 begin
     --- update forum users
-    insert into f_u(f, u)
-    values (new.forum, new.author)
+    insert into f_u(f, u, fullname, about, email)
+    select new.forum, new.author, fullname, about, email
+    from users
+    where new.author = nickname
     on conflict do nothing;
     return null;
 end;

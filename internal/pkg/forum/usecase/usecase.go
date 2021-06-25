@@ -147,20 +147,24 @@ func (u *forumUsecase) CreateThread(forumSlug string, t domain.Thread) (*domain.
 }
 
 func generateUserRequest(slug string, params utilities.ArrayOutParams) (string, []interface{}, error) {
-	req := psql.Select("u.nickname", "u.fullname", "u.about", "u.email").From("f_u").Join("users u on f_u.u = u.nickname").Where(sq.Eq{"f_u.f": slug})
+	var order string
+	var s string
 	if params.Desc {
-		if params.Since != "" {
-			req = req.Where(sq.Lt{"nickname": params.Since})
-		}
-		req = req.OrderBy("nickname desc")
+		order, s = "desc", " < "
 	} else {
-		if params.Since != "" {
-			req = req.Where(sq.Gt{"nickname": params.Since})
-		}
-		req = req.OrderBy("nickname")
+		order, s = "asc", " > "
 	}
-	req = req.Limit(uint64(params.Limit))
-	return req.ToSql()
+	var query string
+	args := make([]interface{}, 0)
+	if params.Since != "" {
+		query = `select u as nickname, fullname, about, email from f_u where f = $1 and u ` + s + ` $2 order by u ` + order + ` limit $3;`
+		args = append(args, slug, params.Since, params.Limit)
+	} else {
+		query = `select u as nickname, fullname, about, email from f_u where f = $1 order by u ` + order + ` limit $2;`
+		args = append(args, slug, params.Limit)
+	}
+
+	return query, args, nil
 }
 
 func (u *forumUsecase) Users(forumSlug string, params utilities.ArrayOutParams) ([]domain.User, error) {

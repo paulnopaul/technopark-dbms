@@ -114,7 +114,7 @@ func parentPostsQuery(id int32, limit int, since int64, desc bool) (string, []in
 	} else {
 		order = "asc"
 	}
-	if order == "desc" && since != 0 {
+	if desc && since != 0 {
 		s = " < "
 	} else {
 		s = " > "
@@ -140,14 +140,9 @@ func flatPostsQuery(id int32, limit int, since int64, desc bool) (string, []inte
 	var order string
 	var s string
 	if desc {
-		order = "desc"
+		order, s = "desc", " < "
 	} else {
-		order = "asc"
-	}
-	if order == "desc" {
-		s = " < "
-	} else {
-		s = " > "
+		order, s = "asc", " > "
 	}
 	var query string
 	args := make([]interface{}, 0)
@@ -174,7 +169,7 @@ func treePostsQuery(id int32, limit int, since int64, desc bool) (string, []inte
 	} else {
 		order = "asc"
 	}
-	if order == "desc" && since != 0 {
+	if desc && since != 0 {
 		s = " < "
 	} else {
 		s = " > "
@@ -261,13 +256,6 @@ func (t threadUsecase) VoteThread(s utilities.SlugOrId, vote domain.Vote) (*doma
 		return nil, err
 	}
 
-	userExists, err := t.UUCase.Exists(vote.Nickname, "")
-	if err != nil {
-		return nil, err
-	} else if !userExists {
-		return nil, thread.AuthorNotExists
-	}
-
 	var currentVoice int32
 	getVoteQuery := "select voice from votes where thread = $1 and username = $2;"
 	err = t.DB.QueryRow(getVoteQuery, threadDetails.ID, vote.Nickname).Scan(&currentVoice)
@@ -276,7 +264,7 @@ func (t threadUsecase) VoteThread(s utilities.SlugOrId, vote domain.Vote) (*doma
 			newVoteQuery := "insert into votes(thread, username, voice) values ($1, $2, $3);"
 			_, err = t.DB.Exec(newVoteQuery, threadDetails.ID, vote.Nickname, vote.Voice)
 			if err != nil {
-				return nil, err
+				return nil, thread.AuthorNotExists
 			}
 			threadDetails.Votes += vote.Voice
 			return threadDetails, nil
