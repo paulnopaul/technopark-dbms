@@ -2,7 +2,6 @@ package usecase
 
 import (
 	"errors"
-	"fmt"
 	sq "github.com/Masterminds/squirrel"
 	"github.com/jackc/pgx"
 	"strconv"
@@ -36,13 +35,6 @@ func (t threadUsecase) CreatePosts(s utilities.SlugOrId, posts []domain.Post) ([
 		posts[i].Created = now
 		posts[i].Thread = threadInfo.ID
 		posts[i].Forum = threadInfo.Forum
-		authorExists, err := t.UUCase.Exists(posts[i].Author, "")
-		if err != nil {
-			return nil, err
-		}
-		if !authorExists {
-			return nil, thread.AuthorNotExists
-		}
 	}
 
 	query := "insert into posts(parent, author, message, is_edited, thread, created, forum) values ($1, $2, $3, $4, $5, $6, $7) returning id;"
@@ -53,7 +45,7 @@ func (t threadUsecase) CreatePosts(s utilities.SlugOrId, posts []domain.Post) ([
 			if err.Error() == "ERROR: 66666 (SQLSTATE 66666)" {
 				return nil, post.InvalidParentError
 			}
-			return nil, err
+			return nil, thread.AuthorNotExists
 		}
 	}
 	return posts, nil
@@ -280,7 +272,6 @@ func (t threadUsecase) GetThreadPosts(s utilities.SlugOrId, params utilities.Arr
 func (t threadUsecase) VoteThread(s utilities.SlugOrId, vote domain.Vote) (*domain.Thread, error) {
 	threadDetails, err := t.GetThreadDetails(s)
 	if err != nil {
-		fmt.Println("EPROERPOR")
 		return nil, err
 	}
 
