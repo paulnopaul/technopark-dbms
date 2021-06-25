@@ -74,13 +74,14 @@ create unlogged table if not exists posts
     foreign key (thread) references threads (id)
 );
 
-create index user_nickname_index on users (nickname);
-create index user_email_index on users (email);
+create index user_nickname_index on users using hash (nickname);
+create index user_email_index on users using hash (email);
 
-create index forum_slug_index on forums (slug);
+create index forum_slug_index on forums using hash (slug);
 
-create index thread_slug_index on threads (slug);
-create index thread_forum_index on threads (forum);
+create index thread_slug_index on threads using hash (slug);
+create index thread_forum_index on threads using hash (forum);
+create index thread_fcreated_index on threads (forum, created);
 
 create index fu_forum_index on f_u (f);
 create index fu_user_index on f_u (u);
