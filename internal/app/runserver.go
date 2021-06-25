@@ -8,7 +8,6 @@ import (
 	"github.com/valyala/fasthttp"
 	forumDelivery "technopark-dbms/internal/pkg/forum/delivery"
 	forumDBUsecase "technopark-dbms/internal/pkg/forum/usecase"
-	"technopark-dbms/internal/pkg/middlewares"
 	postDelivery "technopark-dbms/internal/pkg/post/delivery"
 	postDBUsecase "technopark-dbms/internal/pkg/post/usecase"
 	serviceDelivery "technopark-dbms/internal/pkg/service/delivery"
@@ -45,12 +44,13 @@ func RunServer(addr string) {
 	r := router.New()
 
 	db := getPostgres()
+	log.SetLevel(log.FatalLevel)
 
-	postUsecase := postDBUsecase.NewPostUsecase(db)
 	serviceUsecase := serviceDBUsecase.NewServiceUsecase(db)
 	userUsecase := userDBUsecase.NewUserUsecase(db)
 	threadUsecase := threadDBUsecase.NewThreadUsecase(db, userUsecase)
 	forumUsecase := forumDBUsecase.NewForumUsecase(db, userUsecase, threadUsecase)
+	postUsecase := postDBUsecase.NewPostUsecase(db, userUsecase, forumUsecase, threadUsecase)
 
 	forumDelivery.NewForumHandler(r, forumUsecase)
 	postDelivery.NewPostHandler(r, postUsecase)
@@ -59,7 +59,8 @@ func RunServer(addr string) {
 	userDelivery.NewUserHandler(r, userUsecase)
 
 	log.Println("Listening at: ", addr)
-	err := fasthttp.ListenAndServe(addr, middlewares.Logging(r.Handler))
+	//err := fasthttp.ListenAndServe(addr, middlewares.Logging(r.Handler))
+	err := fasthttp.ListenAndServe(addr, r.Handler)
 	if err != nil {
 		log.Println(fmt.Sprint("Server error: ", err))
 	}

@@ -225,7 +225,7 @@ begin
         where p.id = new.parent
         into parent_way, parent_thread;
         if parent_thread != new.thread or parent_thread is null then
-            raise exception using errcode = '00409';
+            raise exception using errcode = '66666';
         end if;
         new.way := parent_way || new.id;
     end if;

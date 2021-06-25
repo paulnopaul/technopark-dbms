@@ -29,7 +29,6 @@ func (handler *serviceHandler) serviceClearHandler(ctx *fasthttp.RequestCtx) {
 	err := handler.serviceUsecase.Clear()
 	if err != nil {
 		log.WithError(err).Error("service clear error")
-		// TODO message + status
 		return
 	}
 
@@ -40,15 +39,15 @@ func (handler *serviceHandler) serviceStatusHandler(ctx *fasthttp.RequestCtx) {
 	status, err := handler.serviceUsecase.Status()
 	if err != nil {
 		log.WithError(err).Error("service get status error")
-		// TODO message + status
+		utilities.Resp(ctx, fasthttp.StatusInternalServerError, errors.JSONErrorMessage(err))
 		return
 	}
 
-	if err = json.NewEncoder(ctx).Encode(status); err != nil {
+	body, err := json.Marshal(status)
+	if err != nil {
 		log.WithError(err).Error(errors.JSONEncodeError)
 		utilities.Resp(ctx, fasthttp.StatusInternalServerError, errors.JSONEncodeErrorMessage)
 		return
 	}
-
-	ctx.SetStatusCode(http.StatusOK)
+	utilities.Resp(ctx, fasthttp.StatusOK, body)
 }

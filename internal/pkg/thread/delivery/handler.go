@@ -9,7 +9,7 @@ import (
 	"net/http"
 	"technopark-dbms/internal/pkg/domain"
 	"technopark-dbms/internal/pkg/errors"
-	"technopark-dbms/internal/pkg/forum"
+	"technopark-dbms/internal/pkg/post"
 	"technopark-dbms/internal/pkg/thread"
 	"technopark-dbms/internal/pkg/utilities"
 )
@@ -24,14 +24,14 @@ func NewThreadHandler(r *router.Router, tu domain.ThreadUsecase) {
 	}
 	s := r.Group("/thread")
 
-	s.POST("/{slug_or_id}/create", h.threadCreateHandler)
+	s.POST("/{slug_or_id}/create", h.threadCreatePostsHandler)
 	s.GET("/{slug_or_id}/details", h.threadGetDetailsHandler)
 	s.POST("/{slug_or_id}/details", h.threadUpdateDetailsHandler)
 	s.GET("/{slug_or_id}/posts", h.threadGetPostsHandler)
 	s.POST("/{slug_or_id}/vote", h.threadVoteHandler)
 }
 
-func (handler *threadHandler) threadCreateHandler(ctx *fasthttp.RequestCtx) {
+func (handler *threadHandler) threadCreatePostsHandler(ctx *fasthttp.RequestCtx) {
 	slugOrId := utilities.NewSlugOrId(ctx.UserValue("slug_or_id").(string))
 	var parsedPosts []domain.Post
 	err := json.Unmarshal(ctx.PostBody(), &parsedPosts)
@@ -45,8 +45,15 @@ func (handler *threadHandler) threadCreateHandler(ctx *fasthttp.RequestCtx) {
 	responseStatus := fasthttp.StatusCreated
 	if err != nil {
 		log.WithError(err).Error("post creation error")
-		if err == thread.AlreadyExists {
-			responseStatus = fasthttp.StatusConflict
+		if err == thread.NotFound {
+			utilities.Resp(ctx, fasthttp.StatusNotFound, errors.JSONErrorMessage(err))
+			return
+		} else if err == post.InvalidParentError {
+			utilities.Resp(ctx, fasthttp.StatusConflict, errors.JSONErrorMessage(err))
+			return
+		} else if err == thread.AuthorNotExists {
+			utilities.Resp(ctx, fasthttp.StatusNotFound, errors.JSONErrorMessage(err))
+			return
 		} else {
 			utilities.Resp(ctx, fasthttp.StatusInternalServerError, errors.JSONErrorMessage(err))
 			return
@@ -68,7 +75,7 @@ func (handler *threadHandler) threadGetDetailsHandler(ctx *fasthttp.RequestCtx) 
 	forumDetails, err := handler.threadUsecase.GetThreadDetails(slugOrId)
 	if err != nil {
 		log.WithError(err).Error("thread get details error")
-		if err == forum.NotFound {
+		if err == thread.NotFound {
 			utilities.Resp(ctx,
 				fasthttp.StatusNotFound,
 				errors.JSONMessage(fmt.Sprintf("Can't find thread with slug: %s", slugOrId.Slug)))

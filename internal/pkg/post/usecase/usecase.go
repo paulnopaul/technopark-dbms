@@ -38,9 +38,12 @@ func (p *postUsecase) GetById(id int64) (*domain.Post, error) {
 	return resPost, nil
 }
 
-func NewPostUsecase(db *pgx.ConnPool) domain.PostUsecase {
+func NewPostUsecase(db *pgx.ConnPool, uUCase domain.UserUsecase, fUCase domain.ForumUsecase, tUCase domain.ThreadUsecase) domain.PostUsecase {
 	return &postUsecase{
-		DB: db,
+		DB:     db,
+		UUCase: uUCase,
+		FUCase: fUCase,
+		TUCase: tUCase,
 	}
 }
 
@@ -75,20 +78,21 @@ func (p *postUsecase) GetDetails(id int64, relatedUser bool, relatedForum bool, 
 }
 
 func (p *postUsecase) UpdateDetails(id int64, postUpdate domain.Post) (*domain.Post, error) {
-	_, err := p.GetById(id)
+	foundPost, err := p.GetById(id)
 	if err != nil {
 		return nil, err
 	}
 
-	query := "update posts set message = $1, is_edited = true where id = $2 returning id, parent, author, message, is_edited, forum, thread, created;"
-	resPost := &domain.Post{}
-	err = p.DB.QueryRow(query, postUpdate.Message, id).
-		Scan(&resPost.ID, &resPost.Parent, &resPost.Author, &resPost.Message, &resPost.IsEdited, &resPost.Forum, &resPost.Thread, &resPost.Created)
+	if postUpdate.Message == "" || postUpdate.Message == foundPost.Message {
+		return foundPost, nil
+	}
+
+	query := "update posts set message = $1, is_edited = true where id = $2;"
+	_, err = p.DB.Exec(query, postUpdate.Message, id)
 	if err != nil {
-		if err == pgx.ErrNoRows {
-			return nil, post.NotFoundError
-		}
 		return nil, err
 	}
-	return resPost, nil
+	foundPost.Message = postUpdate.Message
+	foundPost.IsEdited = true
+	return foundPost, nil
 }

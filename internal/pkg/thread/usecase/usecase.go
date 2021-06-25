@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"technopark-dbms/internal/pkg/constants"
 	"technopark-dbms/internal/pkg/domain"
+	"technopark-dbms/internal/pkg/post"
 	"technopark-dbms/internal/pkg/thread"
 	"technopark-dbms/internal/pkg/utilities"
 	"time"
@@ -34,6 +35,13 @@ func (t threadUsecase) CreatePosts(s utilities.SlugOrId, posts []domain.Post) ([
 		posts[i].Created = now
 		posts[i].Thread = threadInfo.ID
 		posts[i].Forum = threadInfo.Forum
+		authorExists, err := t.UUCase.Exists(posts[i].Author, "")
+		if err != nil {
+			return nil, err
+		}
+		if !authorExists {
+			return nil, thread.AuthorNotExists
+		}
 	}
 
 	query := "insert into posts(parent, author, message, is_edited, thread, created, forum) values ($1, $2, $3, $4, $5, $6, $7) returning id;"
@@ -41,6 +49,9 @@ func (t threadUsecase) CreatePosts(s utilities.SlugOrId, posts []domain.Post) ([
 		err := t.DB.QueryRow(query, posts[i].Parent, posts[i].Author, posts[i].Message, posts[i].IsEdited, posts[i].Thread, posts[i].Created, posts[i].Forum).
 			Scan(&posts[i].ID)
 		if err != nil {
+			if err.Error() == "ERROR: 66666 (SQLSTATE 66666)" {
+				return nil, post.InvalidParentError
+			}
 			return nil, err
 		}
 	}
@@ -91,12 +102,18 @@ func (t threadUsecase) UpdateThreadDetails(s utilities.SlugOrId, threadUpdate do
 	if err != nil {
 		return nil, err
 	}
+	if threadUpdate.Message == "" && threadUpdate.Title == "" {
+		return threadDetails, nil
+	}
 
 	updateThreadQuery, args, err := generateCreateThreadQuery(threadDetails.ID, threadUpdate)
 	if err != nil {
 		return nil, err
 	}
 	_, err = t.DB.Exec(updateThreadQuery, args...)
+	if err != nil {
+		return nil, err
+	}
 	if threadUpdate.Title != "" {
 		threadDetails.Title = threadUpdate.Title
 	}

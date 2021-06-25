@@ -7,9 +7,10 @@ import (
 	"github.com/valyala/fasthttp"
 	"net/http"
 	"strconv"
+	"strings"
 	"technopark-dbms/internal/pkg/domain"
 	"technopark-dbms/internal/pkg/errors"
-	"technopark-dbms/internal/pkg/forum"
+	"technopark-dbms/internal/pkg/post"
 	"technopark-dbms/internal/pkg/utilities"
 )
 
@@ -28,16 +29,25 @@ func NewPostHandler(r *router.Router, pu domain.PostUsecase) {
 }
 
 func parseRelated(queryArgs *fasthttp.Args) (userRelated, forumRelated, threadRelated bool) {
-	userRelated = queryArgs.Has("user")
-	forumRelated = queryArgs.Has("forum")
-	threadRelated = queryArgs.Has("thread")
+	values := strings.Split(string(queryArgs.Peek("related")), ",")
+	if values != nil {
+		for _, value := range values {
+			if string(value) == "user" {
+				userRelated = true
+			} else if string(value) == "forum" {
+				forumRelated = true
+			} else if string(value) == "thread" {
+				threadRelated = true
+			}
+		}
+	}
 	return
 }
 
 type postFull struct {
 	Post   *domain.Post   `json:"post"`
-	Forum  *domain.Forum  `json:",omitempty"`
-	Thread *domain.Thread `json:",omitempty"`
+	Forum  *domain.Forum  `json:"forum,omitempty"`
+	Thread *domain.Thread `json:"thread,omitempty"`
 	User   *domain.User   `json:"author,omitempty"`
 }
 
@@ -53,9 +63,11 @@ func (handler *postHandler) postGetDetailsHandler(ctx *fasthttp.RequestCtx) {
 	foundPost, foundForum, foundThread, foundUser, err := handler.postUsecase.GetDetails(postId, userRelated, forumRelated, threadRelated)
 	if err != nil {
 		log.WithError(err).Error("post get details error")
-		if err != forum.NotFound {
-
+		if err == post.NotFoundError {
+			utilities.Resp(ctx, fasthttp.StatusNotFound, errors.JSONErrorMessage(err))
+			return
 		}
+		utilities.Resp(ctx, fasthttp.StatusInternalServerError, errors.JSONErrorMessage(err))
 		return
 	}
 
@@ -87,8 +99,12 @@ func (handler *postHandler) postUpdateDetailsHandler(ctx *fasthttp.RequestCtx) {
 
 	foundPost, err := handler.postUsecase.UpdateDetails(postId, *parsedPost)
 	if err != nil {
-		log.WithError(err).Error("forum get details error")
-
+		log.WithError(err).Error("forum update details error")
+		if err == post.NotFoundError {
+			utilities.Resp(ctx, fasthttp.StatusNotFound, errors.JSONErrorMessage(err))
+			return
+		}
+		utilities.Resp(ctx, fasthttp.StatusInternalServerError, errors.JSONEncodeErrorMessage)
 		return
 	}
 
@@ -98,5 +114,5 @@ func (handler *postHandler) postUpdateDetailsHandler(ctx *fasthttp.RequestCtx) {
 		utilities.Resp(ctx, fasthttp.StatusInternalServerError, errors.JSONEncodeErrorMessage)
 		return
 	}
-	utilities.Resp(ctx, fasthttp.StatusCreated, body)
+	utilities.Resp(ctx, fasthttp.StatusOK, body)
 }

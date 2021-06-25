@@ -26,7 +26,7 @@ type Post struct {
 	Parent   int64  `json:"parent,omitempty"`
 	Author   string `json:"author,omitempty"`
 	Message  string `json:"message,omitempty"`
-	IsEdited bool   `json:"is_edited,omitempty"`
+	IsEdited bool   `json:"isEdited,omitempty"`
 	Forum    string `json:"forum,omitempty"`
 	Thread   int32  `json:"thread,omitempty"`
 	Created  string `json:"created,omitempty"`
@@ -39,10 +39,10 @@ type PostUsecase interface {
 }
 
 type Service struct {
-	User   int32
-	Forum  int32
-	Thread int32
-	Post   int64
+	User   int32 `json:"user"`
+	Forum  int32 `json:"forum"`
+	Thread int32 `json:"thread"`
+	Post   int64 `json:"post"`
 }
 
 type ServiceUsecase interface {
