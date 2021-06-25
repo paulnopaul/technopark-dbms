@@ -23,11 +23,11 @@ create unlogged table forums
 drop table if exists f_u cascade;
 create unlogged table f_u
 (
-    f        citext        not null,
-    u        citext        collate "C" not null,
-    fullname text          not null,
+    f        citext             not null,
+    u        citext collate "C" not null,
+    fullname text               not null,
     about    text,
-    email    citext unique not null,
+    email    citext unique      not null,
     unique (f, u),
     foreign key (u) references users (nickname),
     foreign key (f) references forums (slug)
@@ -138,7 +138,6 @@ create trigger new_thread_created_u
     on threads
     for each row
 execute procedure new_thread_add_relation();
-
 
 --- NEW POST
 create or replace function new_post_update_count()
