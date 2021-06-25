@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"technopark-dbms/internal/pkg/domain"
 	"technopark-dbms/internal/pkg/errors"
+	"technopark-dbms/internal/pkg/forum"
 	"technopark-dbms/internal/pkg/utilities"
 )
 
@@ -17,7 +18,9 @@ type postHandler struct {
 }
 
 func NewPostHandler(r *router.Router, pu domain.PostUsecase) {
-	h := postHandler{}
+	h := postHandler{
+		postUsecase: pu,
+	}
 	s := r.Group("/post")
 
 	s.GET("/{id:[0-9]+}/details", h.postGetDetailsHandler)
@@ -32,7 +35,7 @@ func parseRelated(queryArgs *fasthttp.Args) (userRelated, forumRelated, threadRe
 }
 
 type postFull struct {
-	Post   *domain.Post
+	Post   *domain.Post   `json:"post"`
 	Forum  *domain.Forum  `json:",omitempty"`
 	Thread *domain.Thread `json:",omitempty"`
 	User   *domain.User   `json:"author,omitempty"`
@@ -50,7 +53,9 @@ func (handler *postHandler) postGetDetailsHandler(ctx *fasthttp.RequestCtx) {
 	foundPost, foundForum, foundThread, foundUser, err := handler.postUsecase.GetDetails(postId, userRelated, forumRelated, threadRelated)
 	if err != nil {
 		log.WithError(err).Error("post get details error")
-		// todo error + message
+		if err != forum.NotFound {
+
+		}
 		return
 	}
 
@@ -83,7 +88,7 @@ func (handler *postHandler) postUpdateDetailsHandler(ctx *fasthttp.RequestCtx) {
 	foundPost, err := handler.postUsecase.UpdateDetails(postId, *parsedPost)
 	if err != nil {
 		log.WithError(err).Error("forum get details error")
-		// todo error + message
+
 		return
 	}
 

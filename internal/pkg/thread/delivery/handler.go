@@ -92,7 +92,35 @@ func (handler *threadHandler) threadGetDetailsHandler(ctx *fasthttp.RequestCtx) 
 }
 
 func (handler *threadHandler) threadUpdateDetailsHandler(ctx *fasthttp.RequestCtx) {
-	panic("A")
+	slugOrId := utilities.NewSlugOrId(ctx.UserValue("slug_or_id").(string))
+	parsedThread := &domain.Thread{}
+	err := json.Unmarshal(ctx.PostBody(), parsedThread)
+	if err != nil {
+		log.WithError(err).Error(errors.JSONUnmarshallError)
+		utilities.Resp(ctx, http.StatusBadRequest, errors.JSONDecodeErrorMessage)
+		return
+	}
+
+	updatedThread, err := handler.threadUsecase.UpdateThreadDetails(slugOrId, *parsedThread)
+	if err != nil {
+		log.WithError(err).Error("thread update error")
+		if err == thread.NotFound {
+			utilities.Resp(ctx, fasthttp.StatusNotFound, errors.JSONErrorMessage(err))
+			return
+		} else {
+			utilities.Resp(ctx, fasthttp.StatusInternalServerError, errors.JSONErrorMessage(err))
+			return
+		}
+	}
+
+	body, err := json.Marshal(updatedThread)
+	if err != nil {
+		log.WithError(err).Error(errors.JSONEncodeError)
+		utilities.Resp(ctx, fasthttp.StatusInternalServerError, errors.JSONEncodeErrorMessage)
+		return
+	}
+
+	utilities.Resp(ctx, http.StatusOK, body)
 }
 
 func (handler *threadHandler) threadGetPostsHandler(ctx *fasthttp.RequestCtx) {
@@ -101,14 +129,6 @@ func (handler *threadHandler) threadGetPostsHandler(ctx *fasthttp.RequestCtx) {
 	if err != nil {
 		log.WithError(err).Error(errors.QuerystringParseError)
 		utilities.Resp(ctx, fasthttp.StatusInternalServerError, errors.JSONErrorMessage(err))
-		return
-	}
-
-	parsedVote := &domain.Vote{}
-	err = json.Unmarshal(ctx.PostBody(), parsedVote)
-	if err != nil {
-		log.WithError(err).Error(errors.JSONUnmarshallError)
-		utilities.Resp(ctx, http.StatusBadRequest, errors.JSONDecodeErrorMessage)
 		return
 	}
 

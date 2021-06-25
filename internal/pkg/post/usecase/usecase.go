@@ -4,9 +4,11 @@ import (
 	"fmt"
 	sq "github.com/Masterminds/squirrel"
 	"github.com/jackc/pgx"
+	"technopark-dbms/internal/pkg/constants"
 	"technopark-dbms/internal/pkg/domain"
 	"technopark-dbms/internal/pkg/post"
 	"technopark-dbms/internal/pkg/utilities"
+	"time"
 )
 
 var psql = sq.StatementBuilder.PlaceholderFormat(sq.Dollar)
@@ -21,13 +23,17 @@ type postUsecase struct {
 func (p *postUsecase) GetById(id int64) (*domain.Post, error) {
 	query := "select id, parent, author, message, is_edited, forum, thread, created from posts where id = $1"
 	resPost := &domain.Post{}
+	var created *time.Time
 	err := p.DB.QueryRow(query, id).
-		Scan(&resPost.ID, &resPost.Parent, &resPost.Author, &resPost.Message, &resPost.IsEdited, &resPost.Forum, &resPost.Thread, &resPost.Created)
+		Scan(&resPost.ID, &resPost.Parent, &resPost.Author, &resPost.Message, &resPost.IsEdited, &resPost.Forum, &resPost.Thread, &created)
 	if err != nil {
 		if err == pgx.ErrNoRows {
 			return nil, post.NotFoundError
 		}
 		return nil, err
+	}
+	if created != nil {
+		resPost.Created = created.Format(constants.TimeLayout)
 	}
 	return resPost, nil
 }
@@ -47,7 +53,6 @@ func (p *postUsecase) GetDetails(id int64, relatedUser bool, relatedForum bool, 
 	var resForum *domain.Forum
 	var resThread *domain.Thread
 	var resUser *domain.User
-
 	if relatedForum {
 		resForum, err = p.FUCase.Details(resPost.Forum)
 		if err != nil {

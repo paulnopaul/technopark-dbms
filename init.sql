@@ -50,10 +50,10 @@ create table votes
 (
     thread   bigint not null,
     username citext not null,
-    voice    int not null,
+    voice    int    not null,
     unique (thread, username),
-    foreign key (thread) references threads(id),
-    foreign key (username) references users(nickname)
+    foreign key (thread) references threads (id),
+    foreign key (username) references users (nickname)
 );
 
 
@@ -64,10 +64,11 @@ create unlogged table if not exists posts
     parent    bigint,
     author    citext  not null,
     message   text    not null,
-    is_edited boolean not null         default false,
+    is_edited boolean not null default false,
     forum     citext  not null,
     thread    bigint,
-    created   timestamp with time zone default now(),
+    created   timestamp with time zone,
+    way       bigint[],
     foreign key (author) references users (nickname),
     foreign key (forum) references forums (slug),
     foreign key (thread) references threads (id)
@@ -78,10 +79,13 @@ create index user_email_index on users using hash (email);
 create index forum_slug_index on forums using hash (slug);
 create index thread_slug_index on threads using hash (slug);
 create index thread_forum_index on threads using hash (forum);
-create index post_forum_index on posts using hash (forum);
 create index fu_forum_index on f_u (f);
 create index fu_user_index on f_u (u);
 create index votes_index on votes (thread, username);
+create index post_forum_index on posts (forum);
+create index post_user_index on posts (author);
+create index posts_way_index on posts (way);
+create index posts_way_second_index on posts ((way[2]));
 
 --- NEW THREAD
 create or replace function new_thread_update_count()
@@ -191,17 +195,49 @@ end;
 $$
     language 'plpgsql';
 
+drop trigger if exists new_vote_set on votes;
+create trigger new_vote_set
+    after insert
+    on votes
+    for each row
+execute procedure new_vote_update_thread();
 
-CREATE TRIGGER new_vote_set
-    AFTER INSERT
-    ON votes
-    FOR EACH ROW
-EXECUTE PROCEDURE new_vote_update_thread();
+drop trigger if exists vote_updated on votes;
+create trigger vote_updated
+    after update
+    on votes
+    for each row
+execute procedure updated_vote_update_thread();
 
-CREATE TRIGGER vote_updated
-    AFTER update
-    ON votes
-    FOR EACH ROW
-EXECUTE PROCEDURE updated_vote_update_thread();
+--- POSTS
+create or replace function update_posts()
+    returns trigger as
+$$
+declare
+    parent_way    bigint[];
+    parent_thread bigint;
+begin
+    if (new.parent = 0) then
+        new.way = array [0,new.id];
+    else
+        select p.way, p.thread
+        from posts p
+        where p.id = new.parent
+        into parent_way, parent_thread;
+        if parent_thread != new.thread or parent_thread is null then
+            raise exception using errcode = '00409';
+        end if;
+        new.way := parent_way || new.id;
+    end if;
+    return new;
+end;
+$$
+    language 'plpgsql';
 
+drop trigger if exists set_way on posts;
+create trigger set_way
+    before insert
+    on posts
+    for each row
+execute procedure update_posts();
 

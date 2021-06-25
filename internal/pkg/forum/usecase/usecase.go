@@ -235,20 +235,20 @@ func (u *forumUsecase) Threads(forumSlug string, params utilities.ArrayOutParams
 	// id, title, author, message, forum, votes, slug, created
 	resThreads := make([]domain.Thread, 0)
 	for rows.Next() {
-		var thread domain.Thread
+		var currentThread domain.Thread
 		var slug *string
 		var created *time.Time
-		err := rows.Scan(&thread.ID, &thread.Title, &thread.Author, &thread.Forum, &thread.Message, &slug, &created, &thread.Votes)
+		err := rows.Scan(&currentThread.ID, &currentThread.Title, &currentThread.Author, &currentThread.Forum, &currentThread.Message, &slug, &created, &currentThread.Votes)
 		if err != nil {
 			return nil, err
 		}
 		if slug != nil {
-			thread.Slug = *slug
+			currentThread.Slug = *slug
 		}
 		if created != nil {
-			thread.Created = created.Format(constants.TimeLayout)
+			currentThread.Created = created.Format(constants.TimeLayout)
 		}
-		resThreads = append(resThreads, thread)
+		resThreads = append(resThreads, currentThread)
 	}
 
 	return resThreads, nil

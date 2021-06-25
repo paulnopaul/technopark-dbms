@@ -2,13 +2,17 @@ package usecase
 
 import (
 	"errors"
+	sq "github.com/Masterminds/squirrel"
 	"github.com/jackc/pgx"
+	"strconv"
 	"technopark-dbms/internal/pkg/constants"
 	"technopark-dbms/internal/pkg/domain"
 	"technopark-dbms/internal/pkg/thread"
 	"technopark-dbms/internal/pkg/utilities"
 	"time"
 )
+
+var psql = sq.StatementBuilder.PlaceholderFormat(sq.Dollar)
 
 type threadUsecase struct {
 	DB     *pgx.ConnPool
@@ -54,7 +58,6 @@ func (t threadUsecase) GetThreadDetails(s utilities.SlugOrId) (*domain.Thread, e
 		args = append(args, s.ID)
 	}
 
-	//var slug *string
 	var created *time.Time
 	resThread := &domain.Thread{}
 	err := t.DB.QueryRow(query, args...).
@@ -69,19 +72,187 @@ func (t threadUsecase) GetThreadDetails(s utilities.SlugOrId) (*domain.Thread, e
 	if created != nil {
 		resThread.Created = created.Format(constants.TimeLayout)
 	}
-	//if slug != nil {
-	//	resThread.Slug = *slug
-	//}
-
 	return resThread, nil
 }
 
+func generateCreateThreadQuery(threadId int32, threadUpdate domain.Thread) (string, []interface{}, error) {
+	req := psql.Update("threads")
+	if threadUpdate.Title != "" {
+		req = req.Set("title", threadUpdate.Title)
+	}
+	if threadUpdate.Message != "" {
+		req = req.Set("message", threadUpdate.Message)
+	}
+	return req.ToSql()
+}
+
 func (t threadUsecase) UpdateThreadDetails(s utilities.SlugOrId, threadUpdate domain.Thread) (*domain.Thread, error) {
-	panic("implement me")
+	threadDetails, err := t.GetThreadDetails(s)
+	if err != nil {
+		return nil, err
+	}
+
+	updateThreadQuery, args, err := generateCreateThreadQuery(threadDetails.ID, threadUpdate)
+	if err != nil {
+		return nil, err
+	}
+	_, err = t.DB.Exec(updateThreadQuery, args...)
+	if threadUpdate.Title != "" {
+		threadDetails.Title = threadUpdate.Title
+	}
+	if threadUpdate.Message != "" {
+		threadDetails.Message = threadUpdate.Message
+	}
+	return threadDetails, nil
+}
+
+func parentPostsQuery(id int32, limit int, since int64, desc bool) (string, []interface{}) {
+	var order string
+	var s string
+	if desc {
+		order = "desc"
+	} else {
+		order = "asc"
+	}
+	if order == "desc" && since != 0 {
+		s = " < "
+	} else {
+		s = " > "
+	}
+	var query string
+	args := make([]interface{}, 0)
+	if since == 0 {
+		query = `select p.id, p.parent, p.author, p.message, p.is_edited, p.forum, p.thread, p.created
+		from posts p where p.way[2] in (select id from posts where thread = $1 and way[3] is null order by id ` + order + ` limit $2)
+		order by p.way[2] ` + order + `,p.way asc, p.id asc`
+		args = append(args, id, limit)
+	} else {
+		query = `select p.id, p.parent, p.author, p.message, p.is_edited, p.forum, p.thread, p.created
+		from posts p where p.way[2] in (select id from posts where thread = $1 and way[3] is null
+		and way[2] ` + s + `(select way[2] from posts where id = $2) order by id ` + order + ` limit $3)
+		order by p.way[2] ` + order + `,p.way asc, p.id asc`
+		args = append(args, id, since, limit)
+	}
+	return query, args
+}
+
+func flatPostsQuery(id int32, limit int, since int64, desc bool) (string, []interface{}) {
+	var order string
+	var s string
+	if desc {
+		order = "desc"
+	} else {
+		order = "asc"
+	}
+	if order == "desc" {
+		s = " < "
+	} else {
+		s = " > "
+	}
+	var query string
+	args := make([]interface{}, 0)
+	if since == 0 {
+		query = `select p.id, p.parent, p.author, p.message, p.is_edited, p.forum, p.thread, p.created
+		from posts p where p.thread = $1 
+		order by p.id ` + order + ` limit $2   `
+		args = append(args, id, limit)
+	} else {
+		query = `select p.id, p.parent, p.author, p.message, p.is_edited, p.forum, p.thread, p.created
+		from posts p where p.thread = $1 and
+		p.id ` + s + ` $2
+		order by p.id ` + order + ` limit $3   `
+		args = append(args, id, since, limit)
+	}
+	return query, args
+}
+
+func treePostsQuery(id int32, limit int, since int64, desc bool) (string, []interface{}) {
+	var order string
+	var s string
+	if desc {
+		order = "desc"
+	} else {
+		order = "asc"
+	}
+	if order == "desc" && since != 0 {
+		s = " < "
+	} else {
+		s = " > "
+	}
+	var query string
+	args := make([]interface{}, 0)
+	if since == 0 {
+		query = `select p.id, p.parent, p.author, p.message, p.is_edited, p.forum, p.thread, p.created
+		from posts p where p.thread = $1 
+		order by p.way ` + order + `, p.created ` + order + `, p.id asc limit $2   `
+		args = append(args, id, limit)
+	} else {
+		query = `select p.id, p.parent, p.author, p.message, p.is_edited, p.forum, p.thread, p.created
+		from posts p 
+		where p.thread = $1 and way ` + s + `(select way from posts where id = $2)
+		order by p.way ` + order + `, p.created ` + order + `, p.id asc limit $3   `
+		args = append(args, id, since, limit)
+	}
+	return query, args
+}
+
+func generateGetPostsQuery(threadId int32, params utilities.ArrayOutParams) (string, []interface{}, error) {
+	since := int64(0)
+	if params.Since != "" {
+		parsedSince, err := strconv.ParseInt(params.Since, 10, 64)
+		if err != nil {
+			return "", nil, err
+		}
+		since = parsedSince
+	}
+	var query string
+	var args []interface{}
+	switch params.Sort {
+	case "flat":
+		query, args = flatPostsQuery(threadId, int(params.Limit), since, params.Desc)
+	case "tree":
+		query, args = treePostsQuery(threadId, int(params.Limit), since, params.Desc)
+	case "parent_tree":
+		query, args = parentPostsQuery(threadId, int(params.Limit), since, params.Desc)
+	default:
+		query, args = flatPostsQuery(threadId, int(params.Limit), since, params.Desc)
+	}
+	return query, args, nil
 }
 
 func (t threadUsecase) GetThreadPosts(s utilities.SlugOrId, params utilities.ArrayOutParams) ([]domain.Post, error) {
+	threadDetails, err := t.GetThreadDetails(s)
+	if err != nil {
+		return nil, err
+	}
 
+	getPostsQuery, args, err := generateGetPostsQuery(threadDetails.ID, params)
+	if err != nil {
+		return nil, err
+	}
+
+	rows, err := t.DB.Query(getPostsQuery, args...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	// p.id, p.parent, p.author, p.message, p.is_edited, p.forum, p.thread, p.created
+	resPosts := make([]domain.Post, 0)
+	for rows.Next() {
+		var p domain.Post
+		var created *time.Time
+		err := rows.Scan(&p.ID, &p.Parent, &p.Author, &p.Message, &p.IsEdited, &p.Forum, &p.Thread, &created)
+		if err != nil {
+			return nil, err
+		}
+		if created != nil {
+			p.Created = created.Format(constants.TimeLayout)
+		}
+		resPosts = append(resPosts, p)
+	}
+
+	return resPosts, nil
 }
 
 func (t threadUsecase) VoteThread(s utilities.SlugOrId, vote domain.Vote) (*domain.Thread, error) {

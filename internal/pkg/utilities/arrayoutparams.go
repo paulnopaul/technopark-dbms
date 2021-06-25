@@ -2,23 +2,13 @@ package utilities
 
 import (
 	"github.com/valyala/fasthttp"
-	"technopark-dbms/internal/pkg/errors"
 )
 
-type SortType string
-
-var SortTypes = map[SortType]bool{
-	SortType("flat"):        true,
-	SortType("tree"):        true,
-	SortType("parent_tree"): true,
-}
-
 type ArrayOutParams struct {
-	Limit    int32
-	Since    string
-	Desc     bool
-	Sort     SortType
-	HasSort  bool
+	Limit int32
+	Since string
+	Desc  bool
+	Sort  string
 }
 
 func NewArrayOutParams(queryArgs *fasthttp.Args) (*ArrayOutParams, error) {
@@ -39,13 +29,9 @@ func NewArrayOutParams(queryArgs *fasthttp.Args) (*ArrayOutParams, error) {
 	}
 
 	res.Desc = queryArgs.GetBool("desc")
-	if queryArgs.Has("sort") {
-		parsedString := SortType(queryArgs.Peek("sort"))
-		_, sortExists := SortTypes[parsedString]
-		if !sortExists {
-			return nil, errors.WrongSortType
-		}
-	}
 
+	if queryArgs.Has("sort") {
+		res.Sort = string(queryArgs.Peek("sort"))
+	}
 	return res, nil
 }
