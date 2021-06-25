@@ -1,7 +1,6 @@
 package delivery
 
 import (
-	"encoding/json"
 	"github.com/fasthttp/router"
 	log "github.com/sirupsen/logrus"
 	"github.com/valyala/fasthttp"
@@ -42,12 +41,5 @@ func (handler *serviceHandler) serviceStatusHandler(ctx *fasthttp.RequestCtx) {
 		utilities.Resp(ctx, fasthttp.StatusInternalServerError, errors.JSONErrorMessage(err))
 		return
 	}
-
-	body, err := json.Marshal(status)
-	if err != nil {
-		log.WithError(err).Error(errors.JSONEncodeError)
-		utilities.Resp(ctx, fasthttp.StatusInternalServerError, errors.JSONEncodeErrorMessage)
-		return
-	}
-	utilities.Resp(ctx, fasthttp.StatusOK, body)
+	utilities.Resp(ctx, fasthttp.StatusOK, status)
 }

@@ -1,7 +1,7 @@
 create extension if not exists citext;
 
 drop table if exists users cascade;
-create table users
+create unlogged table users
 (
     nickname citext collate "C" primary key not null,
     fullname text                           not null,
@@ -10,7 +10,7 @@ create table users
 );
 
 drop table if exists forums cascade;
-create table forums
+create unlogged table forums
 (
     slug     citext primary key,
     title    text    not null,
@@ -21,7 +21,7 @@ create table forums
 );
 
 drop table if exists f_u cascade;
-create table f_u
+create unlogged table f_u
 (
     f citext not null,
     u citext not null,
@@ -31,7 +31,7 @@ create table f_u
 );
 
 drop table if exists threads cascade;
-create table threads
+create unlogged table threads
 (
     id      bigserial primary key,
     title   text    not null,
@@ -46,7 +46,7 @@ create table threads
 );
 
 drop table if exists votes cascade;
-create table votes
+create unlogged table votes
 (
     thread   bigint not null,
     username citext not null,
@@ -74,14 +74,19 @@ create unlogged table if not exists posts
     foreign key (thread) references threads (id)
 );
 
-create index user_nickname_index on users using hash (nickname);
-create index user_email_index on users using hash (email);
-create index forum_slug_index on forums using hash (slug);
-create index thread_slug_index on threads using hash (slug);
-create index thread_forum_index on threads using hash (forum);
+create index user_nickname_index on users (nickname);
+create index user_email_index on users (email);
+
+create index forum_slug_index on forums (slug);
+
+create index thread_slug_index on threads (slug);
+create index thread_forum_index on threads (forum);
+
 create index fu_forum_index on f_u (f);
 create index fu_user_index on f_u (u);
+
 create index votes_index on votes (thread, username);
+
 create index post_forum_index on posts (forum);
 create index post_user_index on posts (author);
 create index posts_way_index on posts (way);

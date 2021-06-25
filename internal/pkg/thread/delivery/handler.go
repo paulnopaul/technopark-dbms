@@ -59,15 +59,7 @@ func (handler *threadHandler) threadCreatePostsHandler(ctx *fasthttp.RequestCtx)
 			return
 		}
 	}
-
-	body, err := json.Marshal(createdPosts)
-	if err != nil {
-		log.WithError(err).Error(errors.JSONEncodeError)
-		utilities.Resp(ctx, fasthttp.StatusInternalServerError, errors.JSONEncodeErrorMessage)
-		return
-	}
-
-	utilities.Resp(ctx, responseStatus, body)
+	utilities.Resp(ctx, responseStatus, createdPosts)
 }
 
 func (handler *threadHandler) threadGetDetailsHandler(ctx *fasthttp.RequestCtx) {
@@ -87,15 +79,7 @@ func (handler *threadHandler) threadGetDetailsHandler(ctx *fasthttp.RequestCtx) 
 			return
 		}
 	}
-
-	body, err := json.Marshal(forumDetails)
-	if err != nil {
-		log.WithError(err).Error(errors.JSONEncodeError)
-		utilities.Resp(ctx, fasthttp.StatusInternalServerError, errors.JSONEncodeErrorMessage)
-		return
-	}
-
-	utilities.Resp(ctx, fasthttp.StatusOK, body)
+	utilities.Resp(ctx, fasthttp.StatusOK, forumDetails)
 }
 
 func (handler *threadHandler) threadUpdateDetailsHandler(ctx *fasthttp.RequestCtx) {
@@ -119,15 +103,7 @@ func (handler *threadHandler) threadUpdateDetailsHandler(ctx *fasthttp.RequestCt
 			return
 		}
 	}
-
-	body, err := json.Marshal(updatedThread)
-	if err != nil {
-		log.WithError(err).Error(errors.JSONEncodeError)
-		utilities.Resp(ctx, fasthttp.StatusInternalServerError, errors.JSONEncodeErrorMessage)
-		return
-	}
-
-	utilities.Resp(ctx, http.StatusOK, body)
+	utilities.Resp(ctx, http.StatusOK, updatedThread)
 }
 
 func (handler *threadHandler) threadGetPostsHandler(ctx *fasthttp.RequestCtx) {
@@ -150,15 +126,7 @@ func (handler *threadHandler) threadGetPostsHandler(ctx *fasthttp.RequestCtx) {
 			return
 		}
 	}
-
-	body, err := json.Marshal(foundPosts)
-	if err != nil {
-		log.WithError(err).Error(errors.JSONEncodeError)
-		utilities.Resp(ctx, http.StatusInternalServerError, errors.JSONEncodeErrorMessage)
-		return
-	}
-
-	utilities.Resp(ctx, fasthttp.StatusOK, body)
+	utilities.Resp(ctx, fasthttp.StatusOK, foundPosts)
 }
 
 func (handler *threadHandler) threadVoteHandler(ctx *fasthttp.RequestCtx) {
@@ -182,13 +150,5 @@ func (handler *threadHandler) threadVoteHandler(ctx *fasthttp.RequestCtx) {
 			return
 		}
 	}
-
-	body, err := json.Marshal(votedThread)
-	if err != nil {
-		log.WithError(err).Error(errors.JSONEncodeError)
-		utilities.Resp(ctx, http.StatusInternalServerError, errors.JSONEncodeErrorMessage)
-		return
-	}
-
-	utilities.Resp(ctx, fasthttp.StatusOK, body)
+	utilities.Resp(ctx, fasthttp.StatusOK, votedThread)
 }

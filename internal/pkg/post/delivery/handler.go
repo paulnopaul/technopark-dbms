@@ -5,7 +5,6 @@ import (
 	"github.com/fasthttp/router"
 	log "github.com/sirupsen/logrus"
 	"github.com/valyala/fasthttp"
-	"net/http"
 	"strconv"
 	"strings"
 	"technopark-dbms/internal/pkg/domain"
@@ -71,14 +70,8 @@ func (handler *postHandler) postGetDetailsHandler(ctx *fasthttp.RequestCtx) {
 		return
 	}
 
-	body, err := json.Marshal(postFull{foundPost, foundForum, foundThread, foundUser})
-	if err != nil {
-		log.WithError(err).Error(errors.JSONEncodeError)
-		utilities.Resp(ctx, http.StatusInternalServerError, errors.JSONEncodeErrorMessage)
-		return
-	}
-
-	utilities.Resp(ctx, fasthttp.StatusOK, body)
+	postFull := postFull{foundPost, foundForum, foundThread, foundUser}
+	utilities.Resp(ctx, fasthttp.StatusOK, postFull)
 }
 
 func (handler *postHandler) postUpdateDetailsHandler(ctx *fasthttp.RequestCtx) {
@@ -107,12 +100,5 @@ func (handler *postHandler) postUpdateDetailsHandler(ctx *fasthttp.RequestCtx) {
 		utilities.Resp(ctx, fasthttp.StatusInternalServerError, errors.JSONEncodeErrorMessage)
 		return
 	}
-
-	body, err := json.Marshal(foundPost)
-	if err != nil {
-		log.WithError(err).Error(errors.JSONEncodeError)
-		utilities.Resp(ctx, fasthttp.StatusInternalServerError, errors.JSONEncodeErrorMessage)
-		return
-	}
-	utilities.Resp(ctx, fasthttp.StatusOK, body)
+	utilities.Resp(ctx, fasthttp.StatusOK, foundPost)
 }

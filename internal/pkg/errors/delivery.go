@@ -1,7 +1,6 @@
 package errors
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -11,14 +10,12 @@ type JSONMessageType struct {
 	Message string `json:"message"`
 }
 
-func JSONMessage(m string) []byte {
-	res, _ := json.Marshal(JSONMessageType{m})
-	return res
+func JSONMessage(m string) JSONMessageType {
+	return JSONMessageType{m}
 }
 
-func JSONErrorMessage(err error) []byte {
-	res, _ := json.Marshal(JSONMessageType{fmt.Sprint(err)})
-	return res
+func JSONErrorMessage(err error) JSONMessageType {
+	return JSONMessageType{fmt.Sprint(err)}
 }
 
 var (

@@ -41,23 +41,15 @@ func (handler *userHandler) userCreateHandler(ctx *fasthttp.RequestCtx) {
 	createdUser, err, alreadyCreatedUsers := handler.userUsecase.CreateUser(nickname, *parsedUser)
 	if err != nil {
 		log.WithError(err).Error("user creation error")
-		var errorMsg []byte
 		if err == user.AlreadyExistsError {
-			errorMsg, _ = json.Marshal(alreadyCreatedUsers)
+			utilities.Resp(ctx, user.CodeFromError(err), alreadyCreatedUsers)
 		} else {
-			errorMsg = errors.JSONErrorMessage(err)
+			utilities.Resp(ctx, user.CodeFromError(err), errors.JSONErrorMessage(err))
 		}
-		utilities.Resp(ctx, user.CodeFromError(err), errorMsg)
-		return
-	}
-	body, err := json.Marshal(createdUser)
-	if err != nil {
-		log.WithError(err).Error(errors.JSONEncodeError)
-		utilities.Resp(ctx, http.StatusInternalServerError, errors.JSONEncodeErrorMessage)
 		return
 	}
 
-	utilities.Resp(ctx, fasthttp.StatusCreated, body)
+	utilities.Resp(ctx, fasthttp.StatusCreated, createdUser)
 }
 
 func (handler *userHandler) userGetProfileHandler(ctx *fasthttp.RequestCtx) {
@@ -69,16 +61,7 @@ func (handler *userHandler) userGetProfileHandler(ctx *fasthttp.RequestCtx) {
 		utilities.Resp(ctx, user.CodeFromError(err), errors.JSONErrorMessage(err))
 		return
 	}
-
-	body, err := json.Marshal(foundUser)
-	if err != nil {
-		log.WithError(err).Error(errors.JSONEncodeError)
-		utilities.Resp(ctx, fasthttp.StatusInternalServerError, errors.JSONEncodeErrorMessage)
-		return
-	}
-
-	ctx.Success("application/json", body)
-	ctx.SetStatusCode(http.StatusOK)
+	utilities.Resp(ctx, http.StatusOK, foundUser)
 }
 
 func (handler *userHandler) userUpdateProfileHandler(ctx *fasthttp.RequestCtx) {
@@ -98,13 +81,5 @@ func (handler *userHandler) userUpdateProfileHandler(ctx *fasthttp.RequestCtx) {
 		utilities.Resp(ctx, user.CodeFromError(err), errors.JSONErrorMessage(err))
 		return
 	}
-
-	body, err := json.Marshal(updatedUser)
-	if err != nil {
-		log.WithError(err).Error(errors.JSONEncodeError)
-		utilities.Resp(ctx, fasthttp.StatusInternalServerError, errors.JSONEncodeErrorMessage)
-		return
-	}
-
-	utilities.Resp(ctx, fasthttp.StatusOK, body)
+	utilities.Resp(ctx, fasthttp.StatusOK, updatedUser)
 }
