@@ -18,7 +18,7 @@ type threadHandler struct {
 	threadUsecase domain.ThreadUsecase
 }
 
-func NewThreadHandler(r *router.Router, tu domain.ThreadUsecase) {
+func NewThreadHandler(r *router.Group, tu domain.ThreadUsecase) {
 	h := threadHandler{
 		threadUsecase: tu,
 	}

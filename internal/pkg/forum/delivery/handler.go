@@ -17,7 +17,7 @@ type forumHandler struct {
 	forumUsecase domain.ForumUsecase
 }
 
-func NewForumHandler(r *router.Router, fu domain.ForumUsecase) {
+func NewForumHandler(r *router.Group, fu domain.ForumUsecase) {
 	h := forumHandler{
 		forumUsecase: fu,
 	}

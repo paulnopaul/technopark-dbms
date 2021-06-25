@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"errors"
+	"fmt"
 	sq "github.com/Masterminds/squirrel"
 	"github.com/jackc/pgx"
 	"strconv"
@@ -70,9 +71,10 @@ func (t threadUsecase) GetThreadDetails(s utilities.SlugOrId) (*domain.Thread, e
 	}
 
 	var created *time.Time
+	var slug *string
 	resThread := &domain.Thread{}
 	err := t.DB.QueryRow(query, args...).
-		Scan(&resThread.ID, &resThread.Title, &resThread.Author, &resThread.Message, &resThread.Votes, &resThread.Forum, &resThread.Slug, &created)
+		Scan(&resThread.ID, &resThread.Title, &resThread.Author, &resThread.Message, &resThread.Votes, &resThread.Forum, &slug, &created)
 
 	if err != nil {
 		if err == pgx.ErrNoRows {
@@ -82,6 +84,9 @@ func (t threadUsecase) GetThreadDetails(s utilities.SlugOrId) (*domain.Thread, e
 	}
 	if created != nil {
 		resThread.Created = created.Format(constants.TimeLayout)
+	}
+	if slug != nil {
+		resThread.Slug = *slug
 	}
 	return resThread, nil
 }
@@ -275,6 +280,7 @@ func (t threadUsecase) GetThreadPosts(s utilities.SlugOrId, params utilities.Arr
 func (t threadUsecase) VoteThread(s utilities.SlugOrId, vote domain.Vote) (*domain.Thread, error) {
 	threadDetails, err := t.GetThreadDetails(s)
 	if err != nil {
+		fmt.Println("EPROERPOR")
 		return nil, err
 	}
 

@@ -15,7 +15,7 @@ type serviceHandler struct {
 	serviceUsecase domain.ServiceUsecase
 }
 
-func NewServiceHandler(r *router.Router, su domain.ServiceUsecase) {
+func NewServiceHandler(r *router.Group, su domain.ServiceUsecase) {
 	h := serviceHandler{
 		serviceUsecase: su,
 	}

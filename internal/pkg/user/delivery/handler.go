@@ -16,7 +16,7 @@ type userHandler struct {
 	userUsecase domain.UserUsecase
 }
 
-func NewUserHandler(r *router.Router, uc domain.UserUsecase) {
+func NewUserHandler(r *router.Group, uc domain.UserUsecase) {
 	h := userHandler{
 		userUsecase: uc,
 	}

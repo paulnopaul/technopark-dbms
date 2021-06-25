@@ -41,7 +41,8 @@ func getPostgres() *pgx.ConnPool {
 }
 
 func RunServer(addr string) {
-	r := router.New()
+	g := router.New()
+	r := g.Group("/api")
 
 	db := getPostgres()
 	log.SetLevel(log.FatalLevel)
@@ -59,8 +60,8 @@ func RunServer(addr string) {
 	userDelivery.NewUserHandler(r, userUsecase)
 
 	log.Println("Listening at: ", addr)
-	//err := fasthttp.ListenAndServe(addr, middlewares.Logging(r.Handler))
-	err := fasthttp.ListenAndServe(addr, r.Handler)
+	//err := fasthttp.ListenAndServe(addr, middlewares.Logging(g.Handler))
+	err := fasthttp.ListenAndServe(addr, g.Handler)
 	if err != nil {
 		log.Println(fmt.Sprint("Server error: ", err))
 	}

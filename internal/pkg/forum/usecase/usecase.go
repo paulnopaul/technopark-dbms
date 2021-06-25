@@ -83,19 +83,22 @@ func (u *forumUsecase) Details(slug string) (*domain.Forum, error) {
 }
 
 func generateCreateThreadQuery(forumSlug string, t domain.Thread) (string, []interface{}, error) {
-	req := psql.Insert("threads").Columns("author", "forum", "message", "title")
-	values := []interface{}{t.Author, forumSlug, t.Message, t.Title}
+	//req := psql.Insert("threads").Columns("author", "forum", "message", "title")
+	values := make([]interface{}, 0)
+	values = append(values, t.Author, forumSlug, t.Message, t.Title)
+	req := "insert into threads(author, forum, message, title, created, slug) values ($1, $2, $3, $4, $5, $6)"
 	if t.Created != "" {
-		req = req.Columns("created")
 		values = append(values, t.Created)
+	} else {
+		values = append(values, nil)
 	}
 	if t.Slug != "" {
-		req = req.Columns("slug")
 		values = append(values, t.Slug)
+	} else {
+		values = append(values, nil)
 	}
-	req = req.Values(values...)
-	req = req.Suffix("returning id, author, (select f.slug from forums f where f.slug = $2), message, title, created, slug")
-	return req.ToSql()
+	req += "returning id, author, (select f.slug from forums f where f.slug = $2), message, title, created, slug;"
+	return req, values, nil
 }
 
 func (u *forumUsecase) CreateThread(forumSlug string, t domain.Thread) (*domain.Thread, error) {
@@ -127,8 +130,8 @@ func (u *forumUsecase) CreateThread(forumSlug string, t domain.Thread) (*domain.
 		return nil, err
 	}
 	newThread := &domain.Thread{}
-	var slug *string
 	var created *time.Time
+	var slug *string
 	err = u.DB.QueryRow(createThreadQuery, args...).
 		Scan(&newThread.ID, &newThread.Author, &newThread.Forum, &newThread.Message, &newThread.Title, &created, &slug)
 	if err != nil {
@@ -236,17 +239,17 @@ func (u *forumUsecase) Threads(forumSlug string, params utilities.ArrayOutParams
 	resThreads := make([]domain.Thread, 0)
 	for rows.Next() {
 		var currentThread domain.Thread
-		var slug *string
 		var created *time.Time
+		var slug *string
 		err := rows.Scan(&currentThread.ID, &currentThread.Title, &currentThread.Author, &currentThread.Forum, &currentThread.Message, &slug, &created, &currentThread.Votes)
 		if err != nil {
 			return nil, err
 		}
-		if slug != nil {
-			currentThread.Slug = *slug
-		}
 		if created != nil {
 			currentThread.Created = created.Format(constants.TimeLayout)
+		}
+		if slug != nil {
+			currentThread.Slug = *slug
 		}
 		resThreads = append(resThreads, currentThread)
 	}

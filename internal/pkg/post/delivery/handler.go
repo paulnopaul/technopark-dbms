@@ -18,7 +18,7 @@ type postHandler struct {
 	postUsecase domain.PostUsecase
 }
 
-func NewPostHandler(r *router.Router, pu domain.PostUsecase) {
+func NewPostHandler(r *router.Group, pu domain.PostUsecase) {
 	h := postHandler{
 		postUsecase: pu,
 	}
