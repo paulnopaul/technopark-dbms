@@ -86,7 +86,7 @@ create index thread_slug_index on threads using hash (slug);
 create index thread_forum_index on threads using hash (forum);
 create index thread_fcreated_index on threads (forum, created);
 
-create index fu_forum_index on f_u (f);
+create index fu_forum_index on f_u using hash (f);
 create index fu_user_index on f_u (u);
 
 create index votes_index on votes (thread, username);
