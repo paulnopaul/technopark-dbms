@@ -24,7 +24,7 @@ drop table if exists f_u cascade;
 create unlogged table f_u
 (
     f        citext        not null,
-    u        citext        not null,
+    u        citext        collate "C" not null,
     fullname text          not null,
     about    text,
     email    citext unique not null,
