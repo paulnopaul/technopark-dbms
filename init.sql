@@ -3,10 +3,10 @@ create extension if not exists citext;
 drop table if exists users cascade;
 create table users
 (
-    nickname citext unique not null,
-    fullname text          not null,
+    nickname citext collate "POSIX" primary key not null,
+    fullname text                               not null,
     about    text,
-    email    citext unique not null
+    email    citext unique                      not null
 );
 
 drop table if exists forums cascade;
@@ -23,14 +23,16 @@ create table forums
 drop table if exists threads cascade;
 create table threads
 (
-    id      bigserial unique not null,
-    title   text             not null,
-    author  citext           not null,
-    message text             not null,
-    votes   integer          not null default 0,
+    id      bigserial primary key,
+    title   text    not null,
+    author  citext  not null,
+    message text    not null,
+    votes   integer not null default 0,
     slug    citext unique,
-    created timestamp        not null default now(),
-    foreign key (author) references users (nickname)
+    created timestamp with time zone,
+    forum   citext  not null,
+    foreign key (author) references users (nickname),
+    foreign key (forum) references forums (slug)
 );
 
 drop table if exists posts cascade;

@@ -14,9 +14,9 @@ type ForumUsecase interface {
 	CreateForum(f Forum) (*Forum, error)
 	Exists(slug string) (bool, error)
 	Details(slug string) (*Forum, error)
-	CreateThread(slug string, t Thread) (*Thread, error)
+	CreateThread(forumSlug string, t Thread) (*Thread, error)
 	Users(slug string, params utilities.ArrayOutParams) ([]User, error)
-	Threads(slug string, params utilities.ArrayOutParams) ([]Thread, error)
+	Threads(forumSlug string, params utilities.ArrayOutParams) ([]Thread, error)
 }
 
 type Post struct {
@@ -49,14 +49,14 @@ type ServiceUsecase interface {
 }
 
 type Thread struct {
-	ID      int32
-	Title   string
-	Author  string
-	Forum   string
-	Message string
-	Votes   int32
-	Slug    string
-	Created string
+	ID      int32  `json:"id"`
+	Title   string `json:"title"`
+	Author  string `json:"author"`
+	Forum   string `json:"forum"`
+	Message string `json:"message"`
+	Votes   int32  `json:"votes,omitempty"`
+	Slug    string `json:"slug,omitempty"`
+	Created string `json:"created,omitempty"`
 }
 
 type ThreadUsecase interface {

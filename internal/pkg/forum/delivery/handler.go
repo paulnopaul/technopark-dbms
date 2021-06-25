@@ -75,13 +75,20 @@ func (handler *forumHandler) forumCreateHandler(ctx *fasthttp.RequestCtx) {
 
 func (handler *forumHandler) forumDetailsHandler(ctx *fasthttp.RequestCtx) {
 	slugValue := ctx.UserValue("slug").(string)
-	// TODO check slug function (maybe in middlewares)
-
 	forumDetails, err := handler.forumUsecase.Details(slugValue)
 	if err != nil {
 		log.WithError(err).Error("forum get details error")
-		// todo error + message
-		return
+		if err == forum.NotFound {
+			utilities.Resp(ctx,
+				fasthttp.StatusNotFound,
+				errors.JSONMessage(fmt.Sprintf("Can't find forum with slug: %s", slugValue)))
+			return
+		} else {
+			utilities.Resp(ctx,
+				fasthttp.StatusInternalServerError,
+				errors.JSONErrorMessage(err))
+			return
+		}
 	}
 
 	body, err := json.Marshal(forumDetails)
@@ -107,7 +114,7 @@ func (handler *forumHandler) forumCreateThreadHandler(ctx *fasthttp.RequestCtx) 
 	createdThread, err := handler.forumUsecase.CreateThread(slugValue, *parsedThread)
 	if err != nil {
 		log.WithError(err).Error("forum create thread error")
-		// todo error + message
+		utilities.Resp(ctx, fasthttp.StatusInternalServerError, errors.JSONErrorMessage(err))
 		return
 	}
 
@@ -151,15 +158,24 @@ func (handler *forumHandler) forumGetThreadsHandler(ctx *fasthttp.RequestCtx) {
 	params, err := utilities.NewArrayOutParams(ctx.URI().QueryArgs())
 	if err != nil {
 		log.WithError(err).Error(errors.QuerystringParseError)
-		utilities.Resp(ctx, errors.CodeFromDeliveryError(errors.QuerystringParseError), errors.JSONQuerystringErrorMessage)
+		utilities.Resp(ctx,
+			fasthttp.StatusInternalServerError,
+			errors.JSONErrorMessage(err))
 		return
 	}
 
 	foundUsers, err := handler.forumUsecase.Threads(slugValue, *params)
 	if err != nil {
 		log.WithError(err).Error("forum get users error")
-		// todo error + message
-		return
+		if err == forum.NotFound {
+			utilities.Resp(ctx,
+				fasthttp.StatusNotFound,
+				errors.JSONMessage(fmt.Sprintf("Can't find forum with slug: %s", slugValue)))
+			return
+		}
+		utilities.Resp(ctx,
+			fasthttp.StatusInternalServerError,
+			errors.JSONErrorMessage(err))
 	}
 
 	body, err := json.Marshal(foundUsers)

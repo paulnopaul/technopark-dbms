@@ -1,10 +1,10 @@
 package delivery
 
 import (
-	"technopark-dbms/internal/pkg/domain"
 	"github.com/fasthttp/router"
 	"github.com/valyala/fasthttp"
 	"net/http"
+	"technopark-dbms/internal/pkg/domain"
 )
 
 type threadHandler struct {
