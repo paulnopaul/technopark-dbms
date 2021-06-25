@@ -1,9 +1,9 @@
 package usecase
 
 import (
-	"database/sql"
 	"fmt"
 	sq "github.com/Masterminds/squirrel"
+	"github.com/jackc/pgx"
 	"technopark-dbms/internal/pkg/domain"
 	"technopark-dbms/internal/pkg/post"
 	"technopark-dbms/internal/pkg/utilities"
@@ -12,7 +12,7 @@ import (
 var psql = sq.StatementBuilder.PlaceholderFormat(sq.Dollar)
 
 type postUsecase struct {
-	DB     *sql.DB
+	DB     *pgx.ConnPool
 	UUCase domain.UserUsecase
 	FUCase domain.ForumUsecase
 	TUCase domain.ThreadUsecase
@@ -24,7 +24,7 @@ func (p *postUsecase) GetById(id int64) (*domain.Post, error) {
 	err := p.DB.QueryRow(query, id).
 		Scan(&resPost.ID, &resPost.Parent, &resPost.Author, &resPost.Message, &resPost.IsEdited, &resPost.Forum, &resPost.Thread, &resPost.Created)
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if err == pgx.ErrNoRows {
 			return nil, post.NotFoundError
 		}
 		return nil, err
@@ -32,7 +32,7 @@ func (p *postUsecase) GetById(id int64) (*domain.Post, error) {
 	return resPost, nil
 }
 
-func NewPostUsecase(db *sql.DB) domain.PostUsecase {
+func NewPostUsecase(db *pgx.ConnPool) domain.PostUsecase {
 	return &postUsecase{
 		DB: db,
 	}
@@ -80,7 +80,7 @@ func (p *postUsecase) UpdateDetails(id int64, postUpdate domain.Post) (*domain.P
 	err = p.DB.QueryRow(query, postUpdate.Message, id).
 		Scan(&resPost.ID, &resPost.Parent, &resPost.Author, &resPost.Message, &resPost.IsEdited, &resPost.Forum, &resPost.Thread, &resPost.Created)
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if err == pgx.ErrNoRows {
 			return nil, post.NotFoundError
 		}
 		return nil, err

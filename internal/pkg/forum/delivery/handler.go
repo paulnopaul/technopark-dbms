@@ -112,10 +112,18 @@ func (handler *forumHandler) forumCreateThreadHandler(ctx *fasthttp.RequestCtx) 
 	}
 
 	createdThread, err := handler.forumUsecase.CreateThread(slugValue, *parsedThread)
+	respStatus := fasthttp.StatusCreated
 	if err != nil {
 		log.WithError(err).Error("forum create thread error")
-		utilities.Resp(ctx, fasthttp.StatusInternalServerError, errors.JSONErrorMessage(err))
-		return
+		if err == forum.AlreadyExists {
+			respStatus = fasthttp.StatusConflict
+		} else if err == forum.AuthorNotExists {
+			utilities.Resp(ctx, fasthttp.StatusNotFound, errors.JSONErrorMessage(err))
+			return
+		} else {
+			utilities.Resp(ctx, fasthttp.StatusInternalServerError, errors.JSONErrorMessage(err))
+			return
+		}
 	}
 
 	body, err := json.Marshal(createdThread)
@@ -125,7 +133,7 @@ func (handler *forumHandler) forumCreateThreadHandler(ctx *fasthttp.RequestCtx) 
 		return
 	}
 
-	utilities.Resp(ctx, fasthttp.StatusCreated, body)
+	utilities.Resp(ctx, respStatus, body)
 }
 
 func (handler *forumHandler) forumGetUsersHandler(ctx *fasthttp.RequestCtx) {
@@ -133,24 +141,29 @@ func (handler *forumHandler) forumGetUsersHandler(ctx *fasthttp.RequestCtx) {
 	params, err := utilities.NewArrayOutParams(ctx.QueryArgs())
 	if err != nil {
 		log.WithError(err).Error(errors.QuerystringParseError)
-		utilities.Resp(ctx, errors.CodeFromDeliveryError(errors.QuerystringParseError), errors.JSONQuerystringErrorMessage)
+		utilities.Resp(ctx, fasthttp.StatusInternalServerError, errors.JSONErrorMessage(err))
 		return
 	}
 
 	foundUsers, err := handler.forumUsecase.Users(slugValue, *params)
 	if err != nil {
 		log.WithError(err).Error("forum get users error")
-		// todo error + message
+		if err == forum.NotFound {
+			utilities.Resp(ctx, http.StatusNotFound, errors.JSONErrorMessage(err))
+			return
+		}
+		utilities.Resp(ctx, http.StatusInternalServerError, errors.JSONErrorMessage(err))
 		return
 	}
 
-	if err = json.NewEncoder(ctx).Encode(foundUsers); err != nil {
+	body, err := json.Marshal(foundUsers)
+	if err != nil {
 		log.WithError(err).Error(errors.JSONEncodeError)
-		utilities.Resp(ctx, http.StatusInternalServerError, errors.JSONEncodeErrorMessage)
+		utilities.Resp(ctx, fasthttp.StatusInternalServerError, errors.JSONEncodeErrorMessage)
 		return
 	}
 
-	ctx.SetStatusCode(http.StatusOK)
+	utilities.Resp(ctx, http.StatusOK, body)
 }
 
 func (handler *forumHandler) forumGetThreadsHandler(ctx *fasthttp.RequestCtx) {

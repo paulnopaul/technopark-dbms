@@ -1,8 +1,8 @@
 package utilities
 
 import (
-	"technopark-dbms/internal/pkg/errors"
 	"github.com/valyala/fasthttp"
+	"technopark-dbms/internal/pkg/errors"
 )
 
 type SortType string
@@ -15,7 +15,6 @@ var SortTypes = map[SortType]bool{
 
 type ArrayOutParams struct {
 	Limit    int32
-	HasLimit bool
 	Since    string
 	Desc     bool
 	Sort     SortType
@@ -36,7 +35,7 @@ func NewArrayOutParams(queryArgs *fasthttp.Args) (*ArrayOutParams, error) {
 	}
 
 	if queryArgs.Has("since") {
-		res.Since = string(queryArgs.Peek("limit"))
+		res.Since = string(queryArgs.Peek("since"))
 	}
 
 	res.Desc = queryArgs.GetBool("desc")

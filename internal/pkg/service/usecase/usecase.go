@@ -1,12 +1,12 @@
 package usecase
 
 import (
+	"github.com/jackc/pgx"
 	"technopark-dbms/internal/pkg/domain"
-	"database/sql"
 )
 
 type serviceUsecase struct {
-	DB *sql.DB
+	DB *pgx.ConnPool
 }
 
 func (s *serviceUsecase) Clear() error {
@@ -17,9 +17,8 @@ func (s *serviceUsecase) Status() (*domain.Service, error) {
 	panic("implement me")
 }
 
-func NewServiceUsecase(db *sql.DB) domain.ServiceUsecase {
+func NewServiceUsecase(db *pgx.ConnPool) domain.ServiceUsecase {
 	return &serviceUsecase{
 		DB: db,
 	}
 }
-

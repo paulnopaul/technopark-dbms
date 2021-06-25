@@ -1,9 +1,9 @@
 package usecase
 
 import (
-	"database/sql"
 	"errors"
 	sq "github.com/Masterminds/squirrel"
+	"github.com/jackc/pgx"
 	"technopark-dbms/internal/pkg/domain"
 	"technopark-dbms/internal/pkg/user"
 )
@@ -18,7 +18,7 @@ const (
 var psql = sq.StatementBuilder.PlaceholderFormat(sq.Dollar)
 
 type userUsecase struct {
-	DB *sql.DB
+	DB *pgx.ConnPool
 }
 
 func (u *userUsecase) GetProfiles(nickname, email string) ([]domain.User, error) {
@@ -47,7 +47,7 @@ func (u *userUsecase) GetProfiles(nickname, email string) ([]domain.User, error)
 	return resUsers, nil
 }
 
-func NewUserUsecase(db *sql.DB) domain.UserUsecase {
+func NewUserUsecase(db *pgx.ConnPool) domain.UserUsecase {
 	return &userUsecase{
 		DB: db,
 	}
@@ -77,7 +77,7 @@ func (u *userUsecase) GetProfile(nickname string) (*domain.User, error) {
 	err := u.DB.QueryRow(query, nickname).
 		Scan(&foundUser.Nickname, &foundUser.Fullname, &foundUser.About, &foundUser.Email)
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if err == pgx.ErrNoRows {
 			return nil, user.NotExistsError
 		}
 		return nil, err
@@ -140,7 +140,7 @@ func (u *userUsecase) Exists(nickname string, email string) (bool, error) {
 	err := u.DB.QueryRow(checkUserExistsQuery, nickname, email).
 		Scan(&foundNick)
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if err == pgx.ErrNoRows {
 			return false, nil
 		}
 		return false, err

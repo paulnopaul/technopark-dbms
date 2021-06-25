@@ -1,6 +1,8 @@
 package domain
 
-import "technopark-dbms/internal/pkg/utilities"
+import (
+	"technopark-dbms/internal/pkg/utilities"
+)
 
 type Forum struct {
 	Title   string `json:"title"`
@@ -20,14 +22,14 @@ type ForumUsecase interface {
 }
 
 type Post struct {
-	ID       int64
-	Parent   int64
-	Author   string
-	Message  string
-	IsEdited bool `json:"idEdited"`
-	Forum    string
-	Thread   string
-	Created  string
+	ID       int64  `json:"id"`
+	Parent   int64  `json:"parent,omitempty"`
+	Author   string `json:"author,omitempty"`
+	Message  string `json:"message,omitempty"`
+	IsEdited bool   `json:"is_edited,omitempty"`
+	Forum    string `json:"forum,omitempty"`
+	Thread   int32  `json:"thread,omitempty"`
+	Created  string `json:"created,omitempty"`
 }
 
 type PostUsecase interface {
@@ -83,6 +85,6 @@ type UserUsecase interface {
 }
 
 type Vote struct {
-	Nickname string
-	Voice    int32
+	Nickname string `json:"nickname"`
+	Voice    int32  `json:"voice"`
 }
