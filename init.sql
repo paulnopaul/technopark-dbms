@@ -3,6 +3,7 @@ create extension if not exists citext;
 drop table if exists users cascade;
 create unlogged table users
 (
+    id       bigserial                      not null,
     nickname citext collate "C" primary key not null,
     fullname text                           not null,
     about    text,
@@ -12,11 +13,12 @@ create unlogged table users
 drop table if exists forums cascade;
 create unlogged table forums
 (
+    id       bigserial not null,
     slug     citext primary key,
-    title    text    not null,
-    username citext  not null,
-    posts    integer not null default 0,
-    threads  integer not null default 0,
+    title    text      not null,
+    username citext    not null,
+    posts    integer   not null default 0,
+    threads  integer   not null default 0,
     foreign key (username) references users (nickname)
 );
 
@@ -222,7 +224,7 @@ create trigger vote_updated
 execute procedure updated_vote_update_thread();
 
 --- POSTS
-create or replace function update_posts()
+create or replace function update_post_ways()
     returns trigger as
 $$
 declare
@@ -246,10 +248,9 @@ end;
 $$
     language 'plpgsql';
 
-drop trigger if exists set_way on posts;
-create trigger set_way
+
+create trigger add_path
     before insert
     on posts
     for each row
-execute procedure update_posts();
-
+execute procedure update_post_ways();
