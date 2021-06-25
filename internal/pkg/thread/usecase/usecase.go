@@ -83,17 +83,6 @@ func (t threadUsecase) GetThreadDetails(s utilities.SlugOrId) (*domain.Thread, e
 	return resThread, nil
 }
 
-func generateCreateThreadQuery(threadId int32, threadUpdate domain.Thread) (string, []interface{}, error) {
-	req := psql.Update("threads")
-	if threadUpdate.Title != "" {
-		req = req.Set("title", threadUpdate.Title)
-	}
-	if threadUpdate.Message != "" {
-		req = req.Set("message", threadUpdate.Message)
-	}
-	return req.ToSql()
-}
-
 func (t threadUsecase) UpdateThreadDetails(s utilities.SlugOrId, threadUpdate domain.Thread) (*domain.Thread, error) {
 	threadDetails, err := t.GetThreadDetails(s)
 	if err != nil {
@@ -103,11 +92,8 @@ func (t threadUsecase) UpdateThreadDetails(s utilities.SlugOrId, threadUpdate do
 		return threadDetails, nil
 	}
 
-	updateThreadQuery, args, err := generateCreateThreadQuery(threadDetails.ID, threadUpdate)
-	if err != nil {
-		return nil, err
-	}
-	_, err = t.DB.Exec(updateThreadQuery, args...)
+	updateThreadQuery := "update threads set title=coalesce(nullif($1, ''), title), message=coalesce(nullif($2, ''), message) where id = $3;"
+	_, err = t.DB.Exec(updateThreadQuery, threadUpdate.Title, threadUpdate.Message, threadDetails.ID)
 	if err != nil {
 		return nil, err
 	}
