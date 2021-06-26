@@ -67,7 +67,7 @@ func (handler *forumHandler) forumCreateHandler(ctx *fasthttp.RequestCtx) {
 
 func (handler *forumHandler) forumDetailsHandler(ctx *fasthttp.RequestCtx) {
 	slugValue := ctx.UserValue("slug").(string)
-	forumDetails, err := handler.forumUsecase.Details(slugValue)
+	forumDetails, err := handler.forumUsecase.GetForumDetails(slugValue)
 	if err != nil {
 		log.WithError(err).Error("forum get details error")
 		if err == forum.NotFound {
@@ -123,7 +123,7 @@ func (handler *forumHandler) forumGetUsersHandler(ctx *fasthttp.RequestCtx) {
 		return
 	}
 
-	foundUsers, err := handler.forumUsecase.Users(slugValue, *params)
+	foundUsers, err := handler.forumUsecase.GetUsers(slugValue, *params)
 	if err != nil {
 		log.WithError(err).Error("forum get users error")
 		if err == forum.NotFound {
@@ -148,7 +148,7 @@ func (handler *forumHandler) forumGetThreadsHandler(ctx *fasthttp.RequestCtx) {
 		return
 	}
 
-	foundUsers, err := handler.forumUsecase.Threads(slugValue, *params)
+	foundUsers, err := handler.forumUsecase.GetThreads(slugValue, *params)
 	if err != nil {
 		log.WithError(err).Error("forum get users error")
 		if err == forum.NotFound {

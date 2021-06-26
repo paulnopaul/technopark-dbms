@@ -59,7 +59,7 @@ func (handler *postHandler) postGetDetailsHandler(ctx *fasthttp.RequestCtx) {
 	}
 	userRelated, forumRelated, threadRelated := parseRelated(ctx.QueryArgs())
 
-	foundPost, foundForum, foundThread, foundUser, err := handler.postUsecase.GetDetails(postId, userRelated, forumRelated, threadRelated)
+	foundPost, foundForum, foundThread, foundUser, err := handler.postUsecase.GetPostDetails(postId, userRelated, forumRelated, threadRelated)
 	if err != nil {
 		log.WithError(err).Error("post get details error")
 		if err == post.NotFoundError {
@@ -90,7 +90,7 @@ func (handler *postHandler) postUpdateDetailsHandler(ctx *fasthttp.RequestCtx) {
 		return
 	}
 
-	foundPost, err := handler.postUsecase.UpdateDetails(postId, *parsedPost)
+	foundPost, err := handler.postUsecase.UpdatePostDetails(postId, *parsedPost)
 	if err != nil {
 		log.WithError(err).Error("forum update details error")
 		if err == post.NotFoundError {

@@ -139,7 +139,7 @@ func (handler *threadHandler) threadVoteHandler(ctx *fasthttp.RequestCtx) {
 		return
 	}
 
-	votedThread, err := handler.threadUsecase.VoteThread(slugOrId, *parsedVote)
+	votedThread, err := handler.threadUsecase.CreateThreadVote(slugOrId, *parsedVote)
 	if err != nil {
 		log.WithError(err).Error("vote creation error")
 		if err == thread.NotFound || err == thread.AuthorNotExists {

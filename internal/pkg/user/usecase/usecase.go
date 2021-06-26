@@ -84,36 +84,18 @@ func (u *userUsecase) GetProfile(nickname string) (*domain.User, error) {
 	}
 	return foundUser, err
 }
-
-func generateUpdateProfileRequest(nickname string, profileUpdate domain.User) (string, []interface{}, error) {
-	req := psql.Update("users").Where(sq.Eq{"nickname": nickname}).Suffix("returning nickname, fullname, about, email")
-	if profileUpdate.About != "" {
-		req = req.Set("about", profileUpdate.About)
-	}
-	if profileUpdate.Email != "" {
-		req = req.Set("email", profileUpdate.Email)
-	}
-	if profileUpdate.Fullname != "" {
-		req = req.Set("fullname", profileUpdate.Fullname)
-	}
-	return req.ToSql()
-}
-
-func (u *userUsecase) UpdateProfile(nickname string, profileUpdate domain.User) (*domain.User, error) {
-	if profileUpdate.Email == "" && profileUpdate.About == "" && profileUpdate.Fullname == "" {
+func (u *userUsecase) UpdateUser(nickname string, userUpdate domain.User) (*domain.User, error) {
+	if userUpdate.Email == "" && userUpdate.About == "" && userUpdate.Fullname == "" {
 		return u.GetProfile(nickname)
 	}
 
-	userExists, err := u.Exists(nickname, "")
+	foundUser, err := u.GetProfile(nickname)
 	if err != nil {
 		return nil, err
 	}
-	if !userExists {
-		return nil, user.NotExistsError
-	}
 
-	if profileUpdate.Email != "" {
-		emailConflict, err := u.Exists("", profileUpdate.Email)
+	if userUpdate.Email != "" {
+		emailConflict, err := u.UserExists("", userUpdate.Email)
 		if err != nil {
 			return nil, err
 		}
@@ -122,20 +104,31 @@ func (u *userUsecase) UpdateProfile(nickname string, profileUpdate domain.User) 
 		}
 	}
 
-	query, args, err := generateUpdateProfileRequest(nickname, profileUpdate)
+	if userUpdate.Email == "" {
+		userUpdate.Email = foundUser.Email
+	} else {
+		foundUser.Email = userUpdate.Email
+	}
+	if userUpdate.About == "" {
+		userUpdate.About = foundUser.About
+	} else {
+		foundUser.About = userUpdate.About
+	}
+	if userUpdate.Fullname == "" {
+		userUpdate.Fullname = foundUser.Fullname
+	} else {
+		foundUser.Fullname = userUpdate.Fullname
+	}
+
+	query := "update users set fullname = $1, about = $2, email = $3 where nickname = $4"
+	_, err = u.DB.Exec(query, userUpdate.Fullname, userUpdate.About, userUpdate.Email, nickname)
 	if err != nil {
 		return nil, err
 	}
-	updatedUser := &domain.User{}
-	err = u.DB.QueryRow(query, args...).
-		Scan(&updatedUser.Nickname, &updatedUser.Fullname, &updatedUser.About, &updatedUser.Email)
-	if err != nil {
-		return nil, err
-	}
-	return updatedUser, nil
+	return foundUser, nil
 }
 
-func (u *userUsecase) Exists(nickname string, email string) (bool, error) {
+func (u *userUsecase) UserExists(nickname string, email string) (bool, error) {
 	var foundNick string
 	err := u.DB.QueryRow(checkUserExistsQuery, nickname, email).
 		Scan(&foundNick)

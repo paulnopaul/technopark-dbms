@@ -250,7 +250,7 @@ func (t threadUsecase) GetThreadPosts(s utilities.SlugOrId, params utilities.Arr
 	return resPosts, nil
 }
 
-func (t threadUsecase) VoteThread(s utilities.SlugOrId, vote domain.Vote) (*domain.Thread, error) {
+func (t threadUsecase) CreateThreadVote(s utilities.SlugOrId, vote domain.Vote) (*domain.Thread, error) {
 	threadDetails, err := t.GetThreadDetails(s)
 	if err != nil {
 		return nil, err

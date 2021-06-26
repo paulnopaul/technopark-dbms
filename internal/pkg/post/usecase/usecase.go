@@ -20,7 +20,7 @@ type postUsecase struct {
 	TUCase domain.ThreadUsecase
 }
 
-func (p *postUsecase) GetById(id int64) (*domain.Post, error) {
+func (p *postUsecase) GetPostById(id int64) (*domain.Post, error) {
 	query := "select id, parent, author, message, is_edited, forum, thread, created from posts where id = $1"
 	resPost := &domain.Post{}
 	var created *time.Time
@@ -47,8 +47,8 @@ func NewPostUsecase(db *pgx.ConnPool, uUCase domain.UserUsecase, fUCase domain.F
 	}
 }
 
-func (p *postUsecase) GetDetails(id int64, relatedUser bool, relatedForum bool, relatedThread bool) (*domain.Post, *domain.Forum, *domain.Thread, *domain.User, error) {
-	resPost, err := p.GetById(id)
+func (p *postUsecase) GetPostDetails(id int64, relatedUser bool, relatedForum bool, relatedThread bool) (*domain.Post, *domain.Forum, *domain.Thread, *domain.User, error) {
+	resPost, err := p.GetPostById(id)
 	if err != nil {
 		return nil, nil, nil, nil, err
 	}
@@ -57,7 +57,7 @@ func (p *postUsecase) GetDetails(id int64, relatedUser bool, relatedForum bool, 
 	var resThread *domain.Thread
 	var resUser *domain.User
 	if relatedForum {
-		resForum, err = p.FUCase.Details(resPost.Forum)
+		resForum, err = p.FUCase.GetForumDetails(resPost.Forum)
 		if err != nil {
 			return nil, nil, nil, nil, err
 		}
@@ -77,8 +77,8 @@ func (p *postUsecase) GetDetails(id int64, relatedUser bool, relatedForum bool, 
 	return resPost, resForum, resThread, resUser, nil
 }
 
-func (p *postUsecase) UpdateDetails(id int64, postUpdate domain.Post) (*domain.Post, error) {
-	foundPost, err := p.GetById(id)
+func (p *postUsecase) UpdatePostDetails(id int64, postUpdate domain.Post) (*domain.Post, error) {
+	foundPost, err := p.GetPostById(id)
 	if err != nil {
 		return nil, err
 	}

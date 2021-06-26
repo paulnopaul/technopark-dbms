@@ -14,11 +14,11 @@ type Forum struct {
 
 type ForumUsecase interface {
 	CreateForum(f Forum) (*Forum, error)
-	Exists(slug string) (bool, error)
-	Details(slug string) (*Forum, error)
+	ForumExists(slug string) (bool, error)
+	GetForumDetails(slug string) (*Forum, error)
 	CreateThread(forumSlug string, t Thread) (*Thread, error)
-	Users(slug string, params utilities.ArrayOutParams) ([]User, error)
-	Threads(forumSlug string, params utilities.ArrayOutParams) ([]Thread, error)
+	GetUsers(slug string, params utilities.ArrayOutParams) ([]User, error)
+	GetThreads(forumSlug string, params utilities.ArrayOutParams) ([]Thread, error)
 }
 
 type Post struct {
@@ -33,9 +33,9 @@ type Post struct {
 }
 
 type PostUsecase interface {
-	GetById(id int64) (*Post, error)
-	GetDetails(id int64, relatedUser bool, relatedForum bool, relatedThread bool) (*Post, *Forum, *Thread, *User, error)
-	UpdateDetails(id int64, postUpdate Post) (*Post, error)
+	GetPostById(id int64) (*Post, error)
+	GetPostDetails(id int64, relatedUser bool, relatedForum bool, relatedThread bool) (*Post, *Forum, *Thread, *User, error)
+	UpdatePostDetails(id int64, postUpdate Post) (*Post, error)
 }
 
 type Service struct {
@@ -61,12 +61,17 @@ type Thread struct {
 	Created string `json:"created,omitempty"`
 }
 
+type Vote struct {
+	Nickname string `json:"nickname"`
+	Voice    int32  `json:"voice"`
+}
+
 type ThreadUsecase interface {
 	CreatePosts(s utilities.SlugOrId, posts []Post) ([]Post, error)
 	GetThreadDetails(s utilities.SlugOrId) (*Thread, error)
 	UpdateThreadDetails(s utilities.SlugOrId, threadUpdate Thread) (*Thread, error)
 	GetThreadPosts(s utilities.SlugOrId, params utilities.ArrayOutParams) ([]Post, error)
-	VoteThread(s utilities.SlugOrId, vote Vote) (*Thread, error)
+	CreateThreadVote(s utilities.SlugOrId, vote Vote) (*Thread, error)
 }
 
 type User struct {
@@ -80,11 +85,7 @@ type UserUsecase interface {
 	CreateUser(nickname string, createData User) (*User, error, []User)
 	GetProfile(nickname string) (*User, error)
 	GetProfiles(nickname, email string) ([]User, error)
-	UpdateProfile(nickname string, profileUpdate User) (*User, error)
-	Exists(nickname string, email string) (bool, error)
+	UpdateUser(nickname string, profileUpdate User) (*User, error)
+	UserExists(nickname string, email string) (bool, error)
 }
 
-type Vote struct {
-	Nickname string `json:"nickname"`
-	Voice    int32  `json:"voice"`
-}

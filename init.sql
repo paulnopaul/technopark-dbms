@@ -27,9 +27,6 @@ create unlogged table f_u
 (
     f        citext             not null,
     u        citext collate "C" not null,
-    fullname text               not null,
-    about    text,
-    email    citext unique      not null,
     unique (f, u),
     foreign key (u) references users (nickname),
     foreign key (f) references forums (slug)
@@ -88,8 +85,7 @@ create index thread_slug_index on threads using hash (slug);
 create index thread_forum_index on threads using hash (forum);
 create index thread_fcreated_index on threads (forum, created);
 
-create index fu_forum_index on f_u using hash (f);
-create index fu_user_index on f_u (u);
+create index fu_user_index on f_u using hash (u);
 
 create index votes_index on votes (thread, username);
 
@@ -117,10 +113,8 @@ create or replace function new_thread_add_relation()
 $$
 begin
     --- update forum users
-    insert into f_u(f, u, fullname, about, email)
-    select new.forum, new.author, fullname, about, email
-    from users
-    where new.author = nickname
+    insert into f_u(f, u)
+    select new.forum, new.author
     on conflict do nothing;
     return null;
 end;
@@ -160,10 +154,8 @@ create or replace function new_post_add_relation()
 $$
 begin
     --- update forum users
-    insert into f_u(f, u, fullname, about, email)
-    select new.forum, new.author, fullname, about, email
-    from users
-    where new.author = nickname
+    insert into f_u(f, u)
+    select new.forum, new.author
     on conflict do nothing;
     return null;
 end;

@@ -75,7 +75,7 @@ func (handler *userHandler) userUpdateProfileHandler(ctx *fasthttp.RequestCtx) {
 
 	nickname := ctx.UserValue("nickname").(string)
 
-	updatedUser, err := handler.userUsecase.UpdateProfile(nickname, *parsedUser)
+	updatedUser, err := handler.userUsecase.UpdateUser(nickname, *parsedUser)
 	if err != nil {
 		log.WithError(err).WithFields(log.Fields{"nickname": nickname}).Error("user updating error")
 		utilities.Resp(ctx, user.CodeFromError(err), errors.JSONErrorMessage(err))

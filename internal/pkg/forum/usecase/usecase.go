@@ -27,7 +27,7 @@ type forumUsecase struct {
 	TUCase domain.ThreadUsecase
 }
 
-func (u *forumUsecase) Exists(slug string) (bool, error) {
+func (u *forumUsecase) ForumExists(slug string) (bool, error) {
 	var foundSlug string
 	err := u.DB.QueryRow(forumExistsQuery, slug).Scan(&foundSlug)
 	if err != nil {
@@ -48,14 +48,14 @@ func NewForumUsecase(db *pgx.ConnPool, userUsecase domain.UserUsecase, threadUse
 }
 
 func (u *forumUsecase) CreateForum(f domain.Forum) (*domain.Forum, error) {
-	authorExists, err := u.UUCase.Exists(f.User, "")
+	authorExists, err := u.UUCase.UserExists(f.User, "")
 	if err != nil {
 		return nil, err
 	} else if !authorExists {
 		return nil, forum.AuthorNotExists
 	}
 
-	foundForum, err := u.Details(f.Slug)
+	foundForum, err := u.GetForumDetails(f.Slug)
 	if err == nil {
 		return foundForum, forum.AlreadyExists
 	} else if err != forum.NotFound {
@@ -71,7 +71,7 @@ func (u *forumUsecase) CreateForum(f domain.Forum) (*domain.Forum, error) {
 	return createdForum, err
 }
 
-func (u *forumUsecase) Details(slug string) (*domain.Forum, error) {
+func (u *forumUsecase) GetForumDetails(slug string) (*domain.Forum, error) {
 	f := &domain.Forum{}
 	err := u.DB.QueryRow(getForumDetailsQuery, slug).Scan(&f.Title, &f.User, &f.Slug, &f.Posts, &f.Threads)
 	if err == pgx.ErrNoRows {
@@ -83,7 +83,6 @@ func (u *forumUsecase) Details(slug string) (*domain.Forum, error) {
 }
 
 func generateCreateThreadQuery(forumSlug string, t domain.Thread) (string, []interface{}, error) {
-	//req := psql.Insert("threads").Columns("author", "forum", "message", "title")
 	values := make([]interface{}, 0)
 	values = append(values, t.Author, forumSlug, t.Message, t.Title)
 	req := "insert into threads(author, forum, message, title, created, slug) values ($1, $2, $3, $4, $5, $6)"
@@ -111,14 +110,14 @@ func (u *forumUsecase) CreateThread(forumSlug string, t domain.Thread) (*domain.
 			return nil, err
 		}
 	}
-	authorExists, err := u.UUCase.Exists(t.Author, "")
+	authorExists, err := u.UUCase.UserExists(t.Author, "")
 	if err != nil {
 		return nil, err
 	} else if !authorExists {
 		return nil, forum.AuthorNotExists
 	}
 
-	forumExists, err := u.Exists(forumSlug)
+	forumExists, err := u.ForumExists(forumSlug)
 	if err != nil {
 		return nil, err
 	} else if !forumExists {
@@ -157,18 +156,18 @@ func generateUserRequest(slug string, params utilities.ArrayOutParams) (string, 
 	var query string
 	args := make([]interface{}, 0)
 	if params.Since != "" {
-		query = `select u as nickname, fullname, about, email from f_u where f = $1 and u ` + s + ` $2 order by u ` + order + ` limit $3;`
+		query = "select u, fullname, about, email from f_u join users on f_u.u = users.nickname where f = $1 and u " + s + " $2 order by nickname " + order + " limit $3;"
 		args = append(args, slug, params.Since, params.Limit)
 	} else {
-		query = `select u as nickname, fullname, about, email from f_u where f = $1 order by u ` + order + ` limit $2;`
+		query = "select u, fullname, about, email from f_u join users on f_u.u = users.nickname where f = $1 order by nickname " + order + " limit $2;"
 		args = append(args, slug, params.Limit)
 	}
 
 	return query, args, nil
 }
 
-func (u *forumUsecase) Users(forumSlug string, params utilities.ArrayOutParams) ([]domain.User, error) {
-	forumExists, err := u.Exists(forumSlug)
+func (u *forumUsecase) GetUsers(forumSlug string, params utilities.ArrayOutParams) ([]domain.User, error) {
+	forumExists, err := u.ForumExists(forumSlug)
 	if err != nil {
 		return nil, err
 	} else if !forumExists {
@@ -219,8 +218,8 @@ func generateForumThreadsQuery(forum string, params utilities.ArrayOutParams) (s
 	return req.ToSql()
 }
 
-func (u *forumUsecase) Threads(forumSlug string, params utilities.ArrayOutParams) ([]domain.Thread, error) {
-	forumExists, err := u.Exists(forumSlug)
+func (u *forumUsecase) GetThreads(forumSlug string, params utilities.ArrayOutParams) ([]domain.Thread, error) {
+	forumExists, err := u.ForumExists(forumSlug)
 	if err != nil {
 		return nil, err
 	} else if !forumExists {
