@@ -41,7 +41,7 @@ create unlogged table threads
     message text    not null,
     votes   integer not null default 0,
     slug    citext unique,
-    created timestamp with time zone,
+    created timestamp with time zone default now(),
     forum   citext  not null,
     foreign key (author) references users (nickname),
     foreign key (forum) references forums (slug)
@@ -246,3 +246,10 @@ create trigger add_path
     on posts
     for each row
 execute procedure update_post_ways();
+
+ANALYZE users;
+ANALYZE forums;
+ANALYZE threads;
+ANALYZE posts;
+ANALYZE votes;
+ANALYZE f_u;

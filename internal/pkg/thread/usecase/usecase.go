@@ -3,9 +3,9 @@ package usecase
 import (
 	"errors"
 	sq "github.com/Masterminds/squirrel"
+	"github.com/go-openapi/strfmt"
 	"github.com/jackc/pgx"
 	"strconv"
-	"technopark-dbms/internal/pkg/constants"
 	"technopark-dbms/internal/pkg/domain"
 	"technopark-dbms/internal/pkg/post"
 	"technopark-dbms/internal/pkg/thread"
@@ -30,7 +30,7 @@ func (t threadUsecase) CreatePosts(s utilities.SlugOrId, posts []domain.Post) ([
 		return nil, errors.New("WTF")
 	}
 
-	now := time.Now().Format(constants.TimeLayout)
+	now := strfmt.DateTime(time.Now())
 	for i, _ := range posts {
 		posts[i].Created = now
 		posts[i].Thread = threadInfo.ID
@@ -62,11 +62,11 @@ func (t threadUsecase) GetThreadDetails(s utilities.SlugOrId) (*domain.Thread, e
 		args = append(args, s.ID)
 	}
 
-	var created *time.Time
+	//var created *strfmt.DateTime
 	var slug *string
 	resThread := &domain.Thread{}
 	err := t.DB.QueryRow(query, args...).
-		Scan(&resThread.ID, &resThread.Title, &resThread.Author, &resThread.Message, &resThread.Votes, &resThread.Forum, &slug, &created)
+		Scan(&resThread.ID, &resThread.Title, &resThread.Author, &resThread.Message, &resThread.Votes, &resThread.Forum, &slug, &resThread.Created)
 
 	if err != nil {
 		if err == pgx.ErrNoRows {
@@ -74,9 +74,9 @@ func (t threadUsecase) GetThreadDetails(s utilities.SlugOrId) (*domain.Thread, e
 		}
 		return nil, err
 	}
-	if created != nil {
-		resThread.Created = created.Format(constants.TimeLayout)
-	}
+	//if created != nil {
+	//	resThread.Created = *created
+	//}
 	if slug != nil {
 		resThread.Slug = *slug
 	}
@@ -236,14 +236,14 @@ func (t threadUsecase) GetThreadPosts(s utilities.SlugOrId, params utilities.Arr
 	resPosts := make([]domain.Post, 0)
 	for rows.Next() {
 		var p domain.Post
-		var created *time.Time
-		err := rows.Scan(&p.ID, &p.Parent, &p.Author, &p.Message, &p.IsEdited, &p.Forum, &p.Thread, &created)
+		//var created *strfmt.DateTime
+		err := rows.Scan(&p.ID, &p.Parent, &p.Author, &p.Message, &p.IsEdited, &p.Forum, &p.Thread, &p.Created)
 		if err != nil {
 			return nil, err
 		}
-		if created != nil {
-			p.Created = created.Format(constants.TimeLayout)
-		}
+		//if created != nil {
+		//	p.Created = *created
+		//}
 		resPosts = append(resPosts, p)
 	}
 

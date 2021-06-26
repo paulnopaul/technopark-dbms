@@ -4,11 +4,9 @@ import (
 	"fmt"
 	sq "github.com/Masterminds/squirrel"
 	"github.com/jackc/pgx"
-	"technopark-dbms/internal/pkg/constants"
 	"technopark-dbms/internal/pkg/domain"
 	"technopark-dbms/internal/pkg/post"
 	"technopark-dbms/internal/pkg/utilities"
-	"time"
 )
 
 var psql = sq.StatementBuilder.PlaceholderFormat(sq.Dollar)
@@ -23,17 +21,14 @@ type postUsecase struct {
 func (p *postUsecase) GetPostById(id int64) (*domain.Post, error) {
 	query := "select id, parent, author, message, is_edited, forum, thread, created from posts where id = $1"
 	resPost := &domain.Post{}
-	var created *time.Time
+	//var created *strfmt.DateTime
 	err := p.DB.QueryRow(query, id).
-		Scan(&resPost.ID, &resPost.Parent, &resPost.Author, &resPost.Message, &resPost.IsEdited, &resPost.Forum, &resPost.Thread, &created)
+		Scan(&resPost.ID, &resPost.Parent, &resPost.Author, &resPost.Message, &resPost.IsEdited, &resPost.Forum, &resPost.Thread, &resPost.Created)
 	if err != nil {
 		if err == pgx.ErrNoRows {
 			return nil, post.NotFoundError
 		}
 		return nil, err
-	}
-	if created != nil {
-		resPost.Created = created.Format(constants.TimeLayout)
 	}
 	return resPost, nil
 }

@@ -4,12 +4,10 @@ import (
 	sq "github.com/Masterminds/squirrel"
 	"github.com/jackc/pgx"
 	log "github.com/sirupsen/logrus"
-	"technopark-dbms/internal/pkg/constants"
 	"technopark-dbms/internal/pkg/domain"
 	"technopark-dbms/internal/pkg/forum"
 	"technopark-dbms/internal/pkg/thread"
 	"technopark-dbms/internal/pkg/utilities"
-	"time"
 )
 
 const (
@@ -86,7 +84,7 @@ func generateCreateThreadQuery(forumSlug string, t domain.Thread) (string, []int
 	values := make([]interface{}, 0)
 	values = append(values, t.Author, forumSlug, t.Message, t.Title)
 	req := "insert into threads(author, forum, message, title, created, slug) values ($1, $2, $3, $4, $5, $6)"
-	if t.Created != "" {
+	if t.Created.String() != "" {
 		values = append(values, t.Created)
 	} else {
 		values = append(values, nil)
@@ -129,15 +127,11 @@ func (u *forumUsecase) CreateThread(forumSlug string, t domain.Thread) (*domain.
 		return nil, err
 	}
 	newThread := &domain.Thread{}
-	var created *time.Time
 	var slug *string
 	err = u.DB.QueryRow(createThreadQuery, args...).
-		Scan(&newThread.ID, &newThread.Author, &newThread.Forum, &newThread.Message, &newThread.Title, &created, &slug)
+		Scan(&newThread.ID, &newThread.Author, &newThread.Forum, &newThread.Message, &newThread.Title, &newThread.Created, &slug)
 	if err != nil {
 		return nil, err
-	}
-	if created != nil {
-		newThread.Created = created.Format(constants.TimeLayout)
 	}
 	if slug != nil {
 		newThread.Slug = *slug
@@ -242,15 +236,15 @@ func (u *forumUsecase) GetThreads(forumSlug string, params utilities.ArrayOutPar
 	resThreads := make([]domain.Thread, 0)
 	for rows.Next() {
 		var currentThread domain.Thread
-		var created *time.Time
+		//var created *strfmt.DateTime
 		var slug *string
-		err := rows.Scan(&currentThread.ID, &currentThread.Title, &currentThread.Author, &currentThread.Forum, &currentThread.Message, &slug, &created, &currentThread.Votes)
+		err := rows.Scan(&currentThread.ID, &currentThread.Title, &currentThread.Author, &currentThread.Forum, &currentThread.Message, &slug, &currentThread.Created, &currentThread.Votes)
 		if err != nil {
 			return nil, err
 		}
-		if created != nil {
-			currentThread.Created = created.Format(constants.TimeLayout)
-		}
+		//if created != nil {
+		//	currentThread.Created = *created
+		//}
 		if slug != nil {
 			currentThread.Slug = *slug
 		}

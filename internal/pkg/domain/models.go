@@ -1,6 +1,7 @@
 package domain
 
 import (
+	"github.com/go-openapi/strfmt"
 	"technopark-dbms/internal/pkg/utilities"
 )
 
@@ -22,14 +23,14 @@ type ForumUsecase interface {
 }
 
 type Post struct {
-	ID       int64  `json:"id"`
-	Parent   int64  `json:"parent,omitempty"`
-	Author   string `json:"author,omitempty"`
-	Message  string `json:"message,omitempty"`
-	IsEdited bool   `json:"isEdited,omitempty"`
-	Forum    string `json:"forum,omitempty"`
-	Thread   int32  `json:"thread,omitempty"`
-	Created  string `json:"created,omitempty"`
+	ID       int64           `json:"id"`
+	Parent   int64           `json:"parent,omitempty"`
+	Author   string          `json:"author,omitempty"`
+	Message  string          `json:"message,omitempty"`
+	IsEdited bool            `json:"isEdited,omitempty"`
+	Forum    string          `json:"forum,omitempty"`
+	Thread   int32           `json:"thread,omitempty"`
+	Created  strfmt.DateTime `json:"created,omitempty"`
 }
 
 type PostUsecase interface {
@@ -51,14 +52,14 @@ type ServiceUsecase interface {
 }
 
 type Thread struct {
-	ID      int32  `json:"id"`
-	Title   string `json:"title"`
-	Author  string `json:"author"`
-	Forum   string `json:"forum"`
-	Message string `json:"message"`
-	Votes   int32  `json:"votes,omitempty"`
-	Slug    string `json:"slug,omitempty"`
-	Created string `json:"created,omitempty"`
+	ID      int32           `json:"id"`
+	Title   string          `json:"title"`
+	Author  string          `json:"author"`
+	Forum   string          `json:"forum"`
+	Message string          `json:"message"`
+	Votes   int32           `json:"votes,omitempty"`
+	Slug    string          `json:"slug,omitempty"`
+	Created strfmt.DateTime `json:"created,omitempty"`
 }
 
 type Vote struct {
@@ -88,4 +89,3 @@ type UserUsecase interface {
 	UpdateUser(nickname string, profileUpdate User) (*User, error)
 	UserExists(nickname string, email string) (bool, error)
 }
-
