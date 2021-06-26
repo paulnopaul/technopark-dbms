@@ -25,8 +25,8 @@ create unlogged table forums
 drop table if exists f_u cascade;
 create unlogged table f_u
 (
-    f        citext             not null,
-    u        citext collate "C" not null,
+    f citext             not null,
+    u citext collate "C" not null,
     unique (f, u),
     foreign key (u) references users (nickname),
     foreign key (f) references forums (slug)
@@ -66,10 +66,10 @@ create unlogged table if not exists posts
     parent    bigint,
     author    citext  not null,
     message   text    not null,
-    is_edited boolean not null default false,
+    is_edited boolean not null         default false,
     forum     citext  not null,
     thread    bigint,
-    created   timestamp with time zone,
+    created   timestamp with time zone default now(),
     way       bigint[],
     foreign key (author) references users (nickname),
     foreign key (forum) references forums (slug),

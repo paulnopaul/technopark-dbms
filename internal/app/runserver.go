@@ -28,7 +28,7 @@ func getPostgres() *pgx.ConnPool {
 	}
 	poolConf := pgx.ConnPoolConfig{
 		ConnConfig:     conf,
-		MaxConnections: 1000,
+		MaxConnections: 10,
 		AfterConnect:   nil,
 		AcquireTimeout: 0,
 	}
