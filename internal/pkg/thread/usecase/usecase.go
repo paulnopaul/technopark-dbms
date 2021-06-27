@@ -52,24 +52,58 @@ func (t threadUsecase) CreatePosts(s utilities.SlugOrId, posts domain.PostArray)
 	} else if threadInfo == nil {
 		return nil, errors.New("WTF")
 	}
+	if len(posts) == 0 {
+		return posts, nil
+	}
 
 	now := strfmt.DateTime(time.Now())
+	//for i, _ := range posts {
+	//	posts[i].Created = now
+	//	posts[i].Thread = threadInfo.ID
+	//	posts[i].Forum = threadInfo.Forum
+	//}
+
+	//query := "insert into posts(parent, author, message, is_edited, thread, created, forum) values ($1, $2, $3, $4, $5, $6, $7) returning id;"
+	req := psql.Insert("posts(parent, author, message, is_edited, thread, created, forum)")
 	for i, _ := range posts {
 		posts[i].Created = now
 		posts[i].Thread = threadInfo.ID
 		posts[i].Forum = threadInfo.Forum
+		req = req.Values(posts[i].Parent, posts[i].Author, posts[i].Message, posts[i].IsEdited, posts[i].Thread, posts[i].Created, posts[i].Forum)
 	}
+	req = req.Suffix("returning id")
+	query, args, _ := req.ToSql()
 
-	query := "insert into posts(parent, author, message, is_edited, thread, created, forum) values ($1, $2, $3, $4, $5, $6, $7) returning id;"
-	for i, _ := range posts {
-		err := t.DB.QueryRow(query, posts[i].Parent, posts[i].Author, posts[i].Message, posts[i].IsEdited, posts[i].Thread, posts[i].Created, posts[i].Forum).
-			Scan(&posts[i].ID)
+	tx, err := t.DB.Begin()
+	if err != nil {
+		return nil, err
+	}
+	defer tx.Rollback()
+
+	rows, err := tx.Query(query, args...)
+	defer rows.Close()
+
+	for i := 0; rows.Next(); i++ {
+		err := rows.Scan(&posts[i].ID)
 		if err != nil {
-			if err.Error() == "ERROR: 66666 (SQLSTATE 66666)" {
+			return nil, err
+		}
+	}
+	if rows.Err() != nil {
+		if pgErr, ok := rows.Err().(pgx.PgError); ok {
+			if pgErr.Code == "66666" {
 				return nil, post.InvalidParentError
 			}
-			return nil, thread.AuthorNotExists
+			if pgErr.Code == "23503" {
+				return nil, thread.AuthorNotExists
+			}
+			return nil, rows.Err()
 		}
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		return nil, err
 	}
 	return posts, nil
 }
@@ -138,20 +172,14 @@ func parentPostsQuery(id int32, limit int, since int64, desc bool) (string, []in
 	} else {
 		s = " > "
 	}
-	var query string
-	args := make([]interface{}, 0)
-	if since == 0 {
-		query = `select p.id, p.parent, p.author, p.message, p.is_edited, p.forum, p.thread, p.created
-		from posts p where p.way[2] in (select id from posts where thread = $1 and way[3] is null order by id ` + order + ` limit $2)
-		order by p.way[2] ` + order + `,p.way asc, p.id asc`
-		args = append(args, id, limit)
-	} else {
-		query = `select p.id, p.parent, p.author, p.message, p.is_edited, p.forum, p.thread, p.created
-		from posts p where p.way[2] in (select id from posts where thread = $1 and way[3] is null
-		and way[2] ` + s + `(select way[2] from posts where id = $2) order by id ` + order + ` limit $3)
-		order by p.way[2] ` + order + `,p.way asc, p.id asc`
-		args = append(args, id, since, limit)
+	args := []interface{}{id, limit}
+	query := `select p.id, p.parent, p.author, p.message, p.is_edited, p.forum, p.thread, p.created
+			from posts p where p.way[2] in (select id from posts where thread = $1 and way[3] is null`
+	if since != 0 {
+		query += " and way[2] " + s + "(select way[2] from posts where id = $3)"
+		args = append(args, since)
 	}
+	query += " order by id " + order + " limit $2) order by p.way[2] " + order + ",p.way asc, p.id asc"
 	return query, args
 }
 
@@ -163,20 +191,14 @@ func flatPostsQuery(id int32, limit int, since int64, desc bool) (string, []inte
 	} else {
 		order, s = "asc", " > "
 	}
-	var query string
-	args := make([]interface{}, 0)
-	if since == 0 {
-		query = `select p.id, p.parent, p.author, p.message, p.is_edited, p.forum, p.thread, p.created
-		from posts p where p.thread = $1 
-		order by p.id ` + order + ` limit $2   `
-		args = append(args, id, limit)
-	} else {
-		query = `select p.id, p.parent, p.author, p.message, p.is_edited, p.forum, p.thread, p.created
-		from posts p where p.thread = $1 and
-		p.id ` + s + ` $2
-		order by p.id ` + order + ` limit $3   `
-		args = append(args, id, since, limit)
+	args := []interface{}{id, limit}
+	query := `select p.id, p.parent, p.author, p.message, p.is_edited, p.forum, p.thread, p.created
+				from posts p where p.thread = $1`
+	if since != 0 {
+		query += " and p.id " + s + " $3"
+		args = append(args, since)
 	}
+	query += " order by p.id " + order + " limit $2 "
 	return query, args
 }
 
@@ -193,20 +215,14 @@ func treePostsQuery(id int32, limit int, since int64, desc bool) (string, []inte
 	} else {
 		s = " > "
 	}
-	var query string
-	args := make([]interface{}, 0)
-	if since == 0 {
-		query = `select p.id, p.parent, p.author, p.message, p.is_edited, p.forum, p.thread, p.created
-		from posts p where p.thread = $1 
-		order by p.way ` + order + `, p.created ` + order + `, p.id asc limit $2   `
-		args = append(args, id, limit)
-	} else {
-		query = `select p.id, p.parent, p.author, p.message, p.is_edited, p.forum, p.thread, p.created
-		from posts p 
-		where p.thread = $1 and way ` + s + `(select way from posts where id = $2)
-		order by p.way ` + order + `, p.created ` + order + `, p.id asc limit $3   `
-		args = append(args, id, since, limit)
+	args := []interface{}{id, limit}
+	query := `select p.id, p.parent, p.author, p.message, p.is_edited, p.forum, p.thread, p.created
+		from posts p where p.thread = $1`
+	if since != 0 {
+		query += "and way " + s + "(select way from posts where id = $3)"
+		args = append(args, since)
 	}
+	query += "order by p.way " + order + ", p.created " + order + ", p.id asc limit $2 "
 	return query, args
 }
 
