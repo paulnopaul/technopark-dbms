@@ -81,7 +81,7 @@ create index user_email_index on users using hash (email);
 
 create index forum_slug_index on forums using hash (slug);
 
-create index thread_slug_index on threads using hash (slug);
+create index thread_slug_index on threads using hash (slug) where slug is not null;
 create index thread_forum_index on threads using hash (forum);
 create index thread_fcreated_index on threads (forum, created);
 

@@ -6,6 +6,6 @@ import (
 )
 
 func main() {
-	log.SetLevel(log.ErrorLevel)
+	log.SetLevel(log.FatalLevel)
 	app.RunServer(":5000")
 }
