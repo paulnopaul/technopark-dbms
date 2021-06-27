@@ -18,9 +18,12 @@ type ForumUsecase interface {
 	ForumExists(slug string) (bool, error)
 	GetForumDetails(slug string) (*Forum, error)
 	CreateThread(forumSlug string, t Thread) (*Thread, error)
-	GetUsers(slug string, params utilities.ArrayOutParams) ([]User, error)
-	GetThreads(forumSlug string, params utilities.ArrayOutParams) ([]Thread, error)
+	GetUsers(forumSlug string, params utilities.ArrayOutParams) (UserArray, error)
+	GetThreads(forumSlug string, params utilities.ArrayOutParams) (ThreadArray, error)
 }
+
+//easyjson:json
+type ThreadArray []Thread
 
 type Post struct {
 	ID       int64           `json:"id"`
@@ -35,6 +38,13 @@ type Post struct {
 
 //easyjson:json
 type PostArray []Post
+
+type PostFull struct {
+	Post   *Post   `json:"post"`
+	Forum  *Forum  `json:"forum,omitempty"`
+	Thread *Thread `json:"thread,omitempty"`
+	User   *User   `json:"author,omitempty"`
+}
 
 type PostUsecase interface {
 	GetPostById(id int64) (*Post, error)
@@ -71,11 +81,11 @@ type Vote struct {
 }
 
 type ThreadUsecase interface {
-	CreatePosts(s utilities.SlugOrId, posts []Post) ([]Post, error)
+	CreatePosts(s utilities.SlugOrId, posts PostArray) (PostArray, error)
 	GetThreadDetails(s utilities.SlugOrId) (*Thread, error)
 	GetThreadIdAndForum(s utilities.SlugOrId) (*Thread, error)
 	UpdateThreadDetails(s utilities.SlugOrId, threadUpdate Thread) (*Thread, error)
-	GetThreadPosts(s utilities.SlugOrId, params utilities.ArrayOutParams) ([]Post, error)
+	GetThreadPosts(s utilities.SlugOrId, params utilities.ArrayOutParams) (PostArray, error)
 	CreateThreadVote(s utilities.SlugOrId, vote Vote) (*Thread, error)
 }
 
@@ -86,10 +96,17 @@ type User struct {
 	Email    string `json:"email,omitempty"`
 }
 
+//easyjson:json
+type UserArray []User
+
 type UserUsecase interface {
-	CreateUser(nickname string, createData User) (*User, error, []User)
+	CreateUser(nickname string, createData User) (*User, error, UserArray)
 	GetProfile(nickname string) (*User, error)
-	GetProfiles(nickname, email string) ([]User, error)
+	GetProfiles(nickname, email string) (UserArray, error)
 	UpdateUser(nickname string, profileUpdate User) (*User, error)
 	UserExists(nickname string, email string) (bool, error)
+}
+
+type JSONMessageType struct {
+	Message string `json:"message"`
 }

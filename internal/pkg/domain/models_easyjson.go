@@ -90,7 +90,73 @@ func (v *Vote) UnmarshalJSON(data []byte) error {
 func (v *Vote) UnmarshalEasyJSON(l *jlexer.Lexer) {
 	easyjsonD2b7633eDecodeTechnoparkDbmsInternalPkgDomain(l, v)
 }
-func easyjsonD2b7633eDecodeTechnoparkDbmsInternalPkgDomain1(in *jlexer.Lexer, out *User) {
+func easyjsonD2b7633eDecodeTechnoparkDbmsInternalPkgDomain1(in *jlexer.Lexer, out *UserArray) {
+	isTopLevel := in.IsStart()
+	if in.IsNull() {
+		in.Skip()
+		*out = nil
+	} else {
+		in.Delim('[')
+		if *out == nil {
+			if !in.IsDelim(']') {
+				*out = make(UserArray, 0, 1)
+			} else {
+				*out = UserArray{}
+			}
+		} else {
+			*out = (*out)[:0]
+		}
+		for !in.IsDelim(']') {
+			var v1 User
+			(v1).UnmarshalEasyJSON(in)
+			*out = append(*out, v1)
+			in.WantComma()
+		}
+		in.Delim(']')
+	}
+	if isTopLevel {
+		in.Consumed()
+	}
+}
+func easyjsonD2b7633eEncodeTechnoparkDbmsInternalPkgDomain1(out *jwriter.Writer, in UserArray) {
+	if in == nil && (out.Flags&jwriter.NilSliceAsEmpty) == 0 {
+		out.RawString("null")
+	} else {
+		out.RawByte('[')
+		for v2, v3 := range in {
+			if v2 > 0 {
+				out.RawByte(',')
+			}
+			(v3).MarshalEasyJSON(out)
+		}
+		out.RawByte(']')
+	}
+}
+
+// MarshalJSON supports json.Marshaler interface
+func (v UserArray) MarshalJSON() ([]byte, error) {
+	w := jwriter.Writer{}
+	easyjsonD2b7633eEncodeTechnoparkDbmsInternalPkgDomain1(&w, v)
+	return w.Buffer.BuildBytes(), w.Error
+}
+
+// MarshalEasyJSON supports easyjson.Marshaler interface
+func (v UserArray) MarshalEasyJSON(w *jwriter.Writer) {
+	easyjsonD2b7633eEncodeTechnoparkDbmsInternalPkgDomain1(w, v)
+}
+
+// UnmarshalJSON supports json.Unmarshaler interface
+func (v *UserArray) UnmarshalJSON(data []byte) error {
+	r := jlexer.Lexer{Data: data}
+	easyjsonD2b7633eDecodeTechnoparkDbmsInternalPkgDomain1(&r, v)
+	return r.Error()
+}
+
+// UnmarshalEasyJSON supports easyjson.Unmarshaler interface
+func (v *UserArray) UnmarshalEasyJSON(l *jlexer.Lexer) {
+	easyjsonD2b7633eDecodeTechnoparkDbmsInternalPkgDomain1(l, v)
+}
+func easyjsonD2b7633eDecodeTechnoparkDbmsInternalPkgDomain2(in *jlexer.Lexer, out *User) {
 	isTopLevel := in.IsStart()
 	if in.IsNull() {
 		if isTopLevel {
@@ -127,7 +193,7 @@ func easyjsonD2b7633eDecodeTechnoparkDbmsInternalPkgDomain1(in *jlexer.Lexer, ou
 		in.Consumed()
 	}
 }
-func easyjsonD2b7633eEncodeTechnoparkDbmsInternalPkgDomain1(out *jwriter.Writer, in User) {
+func easyjsonD2b7633eEncodeTechnoparkDbmsInternalPkgDomain2(out *jwriter.Writer, in User) {
 	out.RawByte('{')
 	first := true
 	_ = first
@@ -173,27 +239,93 @@ func easyjsonD2b7633eEncodeTechnoparkDbmsInternalPkgDomain1(out *jwriter.Writer,
 // MarshalJSON supports json.Marshaler interface
 func (v User) MarshalJSON() ([]byte, error) {
 	w := jwriter.Writer{}
-	easyjsonD2b7633eEncodeTechnoparkDbmsInternalPkgDomain1(&w, v)
+	easyjsonD2b7633eEncodeTechnoparkDbmsInternalPkgDomain2(&w, v)
 	return w.Buffer.BuildBytes(), w.Error
 }
 
 // MarshalEasyJSON supports easyjson.Marshaler interface
 func (v User) MarshalEasyJSON(w *jwriter.Writer) {
-	easyjsonD2b7633eEncodeTechnoparkDbmsInternalPkgDomain1(w, v)
+	easyjsonD2b7633eEncodeTechnoparkDbmsInternalPkgDomain2(w, v)
 }
 
 // UnmarshalJSON supports json.Unmarshaler interface
 func (v *User) UnmarshalJSON(data []byte) error {
 	r := jlexer.Lexer{Data: data}
-	easyjsonD2b7633eDecodeTechnoparkDbmsInternalPkgDomain1(&r, v)
+	easyjsonD2b7633eDecodeTechnoparkDbmsInternalPkgDomain2(&r, v)
 	return r.Error()
 }
 
 // UnmarshalEasyJSON supports easyjson.Unmarshaler interface
 func (v *User) UnmarshalEasyJSON(l *jlexer.Lexer) {
-	easyjsonD2b7633eDecodeTechnoparkDbmsInternalPkgDomain1(l, v)
+	easyjsonD2b7633eDecodeTechnoparkDbmsInternalPkgDomain2(l, v)
 }
-func easyjsonD2b7633eDecodeTechnoparkDbmsInternalPkgDomain2(in *jlexer.Lexer, out *Thread) {
+func easyjsonD2b7633eDecodeTechnoparkDbmsInternalPkgDomain3(in *jlexer.Lexer, out *ThreadArray) {
+	isTopLevel := in.IsStart()
+	if in.IsNull() {
+		in.Skip()
+		*out = nil
+	} else {
+		in.Delim('[')
+		if *out == nil {
+			if !in.IsDelim(']') {
+				*out = make(ThreadArray, 0, 0)
+			} else {
+				*out = ThreadArray{}
+			}
+		} else {
+			*out = (*out)[:0]
+		}
+		for !in.IsDelim(']') {
+			var v4 Thread
+			(v4).UnmarshalEasyJSON(in)
+			*out = append(*out, v4)
+			in.WantComma()
+		}
+		in.Delim(']')
+	}
+	if isTopLevel {
+		in.Consumed()
+	}
+}
+func easyjsonD2b7633eEncodeTechnoparkDbmsInternalPkgDomain3(out *jwriter.Writer, in ThreadArray) {
+	if in == nil && (out.Flags&jwriter.NilSliceAsEmpty) == 0 {
+		out.RawString("null")
+	} else {
+		out.RawByte('[')
+		for v5, v6 := range in {
+			if v5 > 0 {
+				out.RawByte(',')
+			}
+			(v6).MarshalEasyJSON(out)
+		}
+		out.RawByte(']')
+	}
+}
+
+// MarshalJSON supports json.Marshaler interface
+func (v ThreadArray) MarshalJSON() ([]byte, error) {
+	w := jwriter.Writer{}
+	easyjsonD2b7633eEncodeTechnoparkDbmsInternalPkgDomain3(&w, v)
+	return w.Buffer.BuildBytes(), w.Error
+}
+
+// MarshalEasyJSON supports easyjson.Marshaler interface
+func (v ThreadArray) MarshalEasyJSON(w *jwriter.Writer) {
+	easyjsonD2b7633eEncodeTechnoparkDbmsInternalPkgDomain3(w, v)
+}
+
+// UnmarshalJSON supports json.Unmarshaler interface
+func (v *ThreadArray) UnmarshalJSON(data []byte) error {
+	r := jlexer.Lexer{Data: data}
+	easyjsonD2b7633eDecodeTechnoparkDbmsInternalPkgDomain3(&r, v)
+	return r.Error()
+}
+
+// UnmarshalEasyJSON supports easyjson.Unmarshaler interface
+func (v *ThreadArray) UnmarshalEasyJSON(l *jlexer.Lexer) {
+	easyjsonD2b7633eDecodeTechnoparkDbmsInternalPkgDomain3(l, v)
+}
+func easyjsonD2b7633eDecodeTechnoparkDbmsInternalPkgDomain4(in *jlexer.Lexer, out *Thread) {
 	isTopLevel := in.IsStart()
 	if in.IsNull() {
 		if isTopLevel {
@@ -240,7 +372,7 @@ func easyjsonD2b7633eDecodeTechnoparkDbmsInternalPkgDomain2(in *jlexer.Lexer, ou
 		in.Consumed()
 	}
 }
-func easyjsonD2b7633eEncodeTechnoparkDbmsInternalPkgDomain2(out *jwriter.Writer, in Thread) {
+func easyjsonD2b7633eEncodeTechnoparkDbmsInternalPkgDomain4(out *jwriter.Writer, in Thread) {
 	out.RawByte('{')
 	first := true
 	_ = first
@@ -290,27 +422,27 @@ func easyjsonD2b7633eEncodeTechnoparkDbmsInternalPkgDomain2(out *jwriter.Writer,
 // MarshalJSON supports json.Marshaler interface
 func (v Thread) MarshalJSON() ([]byte, error) {
 	w := jwriter.Writer{}
-	easyjsonD2b7633eEncodeTechnoparkDbmsInternalPkgDomain2(&w, v)
+	easyjsonD2b7633eEncodeTechnoparkDbmsInternalPkgDomain4(&w, v)
 	return w.Buffer.BuildBytes(), w.Error
 }
 
 // MarshalEasyJSON supports easyjson.Marshaler interface
 func (v Thread) MarshalEasyJSON(w *jwriter.Writer) {
-	easyjsonD2b7633eEncodeTechnoparkDbmsInternalPkgDomain2(w, v)
+	easyjsonD2b7633eEncodeTechnoparkDbmsInternalPkgDomain4(w, v)
 }
 
 // UnmarshalJSON supports json.Unmarshaler interface
 func (v *Thread) UnmarshalJSON(data []byte) error {
 	r := jlexer.Lexer{Data: data}
-	easyjsonD2b7633eDecodeTechnoparkDbmsInternalPkgDomain2(&r, v)
+	easyjsonD2b7633eDecodeTechnoparkDbmsInternalPkgDomain4(&r, v)
 	return r.Error()
 }
 
 // UnmarshalEasyJSON supports easyjson.Unmarshaler interface
 func (v *Thread) UnmarshalEasyJSON(l *jlexer.Lexer) {
-	easyjsonD2b7633eDecodeTechnoparkDbmsInternalPkgDomain2(l, v)
+	easyjsonD2b7633eDecodeTechnoparkDbmsInternalPkgDomain4(l, v)
 }
-func easyjsonD2b7633eDecodeTechnoparkDbmsInternalPkgDomain3(in *jlexer.Lexer, out *Service) {
+func easyjsonD2b7633eDecodeTechnoparkDbmsInternalPkgDomain5(in *jlexer.Lexer, out *Service) {
 	isTopLevel := in.IsStart()
 	if in.IsNull() {
 		if isTopLevel {
@@ -347,7 +479,7 @@ func easyjsonD2b7633eDecodeTechnoparkDbmsInternalPkgDomain3(in *jlexer.Lexer, ou
 		in.Consumed()
 	}
 }
-func easyjsonD2b7633eEncodeTechnoparkDbmsInternalPkgDomain3(out *jwriter.Writer, in Service) {
+func easyjsonD2b7633eEncodeTechnoparkDbmsInternalPkgDomain5(out *jwriter.Writer, in Service) {
 	out.RawByte('{')
 	first := true
 	_ = first
@@ -377,27 +509,150 @@ func easyjsonD2b7633eEncodeTechnoparkDbmsInternalPkgDomain3(out *jwriter.Writer,
 // MarshalJSON supports json.Marshaler interface
 func (v Service) MarshalJSON() ([]byte, error) {
 	w := jwriter.Writer{}
-	easyjsonD2b7633eEncodeTechnoparkDbmsInternalPkgDomain3(&w, v)
+	easyjsonD2b7633eEncodeTechnoparkDbmsInternalPkgDomain5(&w, v)
 	return w.Buffer.BuildBytes(), w.Error
 }
 
 // MarshalEasyJSON supports easyjson.Marshaler interface
 func (v Service) MarshalEasyJSON(w *jwriter.Writer) {
-	easyjsonD2b7633eEncodeTechnoparkDbmsInternalPkgDomain3(w, v)
+	easyjsonD2b7633eEncodeTechnoparkDbmsInternalPkgDomain5(w, v)
 }
 
 // UnmarshalJSON supports json.Unmarshaler interface
 func (v *Service) UnmarshalJSON(data []byte) error {
 	r := jlexer.Lexer{Data: data}
-	easyjsonD2b7633eDecodeTechnoparkDbmsInternalPkgDomain3(&r, v)
+	easyjsonD2b7633eDecodeTechnoparkDbmsInternalPkgDomain5(&r, v)
 	return r.Error()
 }
 
 // UnmarshalEasyJSON supports easyjson.Unmarshaler interface
 func (v *Service) UnmarshalEasyJSON(l *jlexer.Lexer) {
-	easyjsonD2b7633eDecodeTechnoparkDbmsInternalPkgDomain3(l, v)
+	easyjsonD2b7633eDecodeTechnoparkDbmsInternalPkgDomain5(l, v)
 }
-func easyjsonD2b7633eDecodeTechnoparkDbmsInternalPkgDomain4(in *jlexer.Lexer, out *PostArray) {
+func easyjsonD2b7633eDecodeTechnoparkDbmsInternalPkgDomain6(in *jlexer.Lexer, out *PostFull) {
+	isTopLevel := in.IsStart()
+	if in.IsNull() {
+		if isTopLevel {
+			in.Consumed()
+		}
+		in.Skip()
+		return
+	}
+	in.Delim('{')
+	for !in.IsDelim('}') {
+		key := in.UnsafeFieldName(false)
+		in.WantColon()
+		if in.IsNull() {
+			in.Skip()
+			in.WantComma()
+			continue
+		}
+		switch key {
+		case "post":
+			if in.IsNull() {
+				in.Skip()
+				out.Post = nil
+			} else {
+				if out.Post == nil {
+					out.Post = new(Post)
+				}
+				(*out.Post).UnmarshalEasyJSON(in)
+			}
+		case "forum":
+			if in.IsNull() {
+				in.Skip()
+				out.Forum = nil
+			} else {
+				if out.Forum == nil {
+					out.Forum = new(Forum)
+				}
+				(*out.Forum).UnmarshalEasyJSON(in)
+			}
+		case "thread":
+			if in.IsNull() {
+				in.Skip()
+				out.Thread = nil
+			} else {
+				if out.Thread == nil {
+					out.Thread = new(Thread)
+				}
+				(*out.Thread).UnmarshalEasyJSON(in)
+			}
+		case "author":
+			if in.IsNull() {
+				in.Skip()
+				out.User = nil
+			} else {
+				if out.User == nil {
+					out.User = new(User)
+				}
+				(*out.User).UnmarshalEasyJSON(in)
+			}
+		default:
+			in.SkipRecursive()
+		}
+		in.WantComma()
+	}
+	in.Delim('}')
+	if isTopLevel {
+		in.Consumed()
+	}
+}
+func easyjsonD2b7633eEncodeTechnoparkDbmsInternalPkgDomain6(out *jwriter.Writer, in PostFull) {
+	out.RawByte('{')
+	first := true
+	_ = first
+	{
+		const prefix string = ",\"post\":"
+		out.RawString(prefix[1:])
+		if in.Post == nil {
+			out.RawString("null")
+		} else {
+			(*in.Post).MarshalEasyJSON(out)
+		}
+	}
+	if in.Forum != nil {
+		const prefix string = ",\"forum\":"
+		out.RawString(prefix)
+		(*in.Forum).MarshalEasyJSON(out)
+	}
+	if in.Thread != nil {
+		const prefix string = ",\"thread\":"
+		out.RawString(prefix)
+		(*in.Thread).MarshalEasyJSON(out)
+	}
+	if in.User != nil {
+		const prefix string = ",\"author\":"
+		out.RawString(prefix)
+		(*in.User).MarshalEasyJSON(out)
+	}
+	out.RawByte('}')
+}
+
+// MarshalJSON supports json.Marshaler interface
+func (v PostFull) MarshalJSON() ([]byte, error) {
+	w := jwriter.Writer{}
+	easyjsonD2b7633eEncodeTechnoparkDbmsInternalPkgDomain6(&w, v)
+	return w.Buffer.BuildBytes(), w.Error
+}
+
+// MarshalEasyJSON supports easyjson.Marshaler interface
+func (v PostFull) MarshalEasyJSON(w *jwriter.Writer) {
+	easyjsonD2b7633eEncodeTechnoparkDbmsInternalPkgDomain6(w, v)
+}
+
+// UnmarshalJSON supports json.Unmarshaler interface
+func (v *PostFull) UnmarshalJSON(data []byte) error {
+	r := jlexer.Lexer{Data: data}
+	easyjsonD2b7633eDecodeTechnoparkDbmsInternalPkgDomain6(&r, v)
+	return r.Error()
+}
+
+// UnmarshalEasyJSON supports easyjson.Unmarshaler interface
+func (v *PostFull) UnmarshalEasyJSON(l *jlexer.Lexer) {
+	easyjsonD2b7633eDecodeTechnoparkDbmsInternalPkgDomain6(l, v)
+}
+func easyjsonD2b7633eDecodeTechnoparkDbmsInternalPkgDomain7(in *jlexer.Lexer, out *PostArray) {
 	isTopLevel := in.IsStart()
 	if in.IsNull() {
 		in.Skip()
@@ -414,9 +669,9 @@ func easyjsonD2b7633eDecodeTechnoparkDbmsInternalPkgDomain4(in *jlexer.Lexer, ou
 			*out = (*out)[:0]
 		}
 		for !in.IsDelim(']') {
-			var v1 Post
-			(v1).UnmarshalEasyJSON(in)
-			*out = append(*out, v1)
+			var v7 Post
+			(v7).UnmarshalEasyJSON(in)
+			*out = append(*out, v7)
 			in.WantComma()
 		}
 		in.Delim(']')
@@ -425,16 +680,16 @@ func easyjsonD2b7633eDecodeTechnoparkDbmsInternalPkgDomain4(in *jlexer.Lexer, ou
 		in.Consumed()
 	}
 }
-func easyjsonD2b7633eEncodeTechnoparkDbmsInternalPkgDomain4(out *jwriter.Writer, in PostArray) {
+func easyjsonD2b7633eEncodeTechnoparkDbmsInternalPkgDomain7(out *jwriter.Writer, in PostArray) {
 	if in == nil && (out.Flags&jwriter.NilSliceAsEmpty) == 0 {
 		out.RawString("null")
 	} else {
 		out.RawByte('[')
-		for v2, v3 := range in {
-			if v2 > 0 {
+		for v8, v9 := range in {
+			if v8 > 0 {
 				out.RawByte(',')
 			}
-			(v3).MarshalEasyJSON(out)
+			(v9).MarshalEasyJSON(out)
 		}
 		out.RawByte(']')
 	}
@@ -443,27 +698,27 @@ func easyjsonD2b7633eEncodeTechnoparkDbmsInternalPkgDomain4(out *jwriter.Writer,
 // MarshalJSON supports json.Marshaler interface
 func (v PostArray) MarshalJSON() ([]byte, error) {
 	w := jwriter.Writer{}
-	easyjsonD2b7633eEncodeTechnoparkDbmsInternalPkgDomain4(&w, v)
+	easyjsonD2b7633eEncodeTechnoparkDbmsInternalPkgDomain7(&w, v)
 	return w.Buffer.BuildBytes(), w.Error
 }
 
 // MarshalEasyJSON supports easyjson.Marshaler interface
 func (v PostArray) MarshalEasyJSON(w *jwriter.Writer) {
-	easyjsonD2b7633eEncodeTechnoparkDbmsInternalPkgDomain4(w, v)
+	easyjsonD2b7633eEncodeTechnoparkDbmsInternalPkgDomain7(w, v)
 }
 
 // UnmarshalJSON supports json.Unmarshaler interface
 func (v *PostArray) UnmarshalJSON(data []byte) error {
 	r := jlexer.Lexer{Data: data}
-	easyjsonD2b7633eDecodeTechnoparkDbmsInternalPkgDomain4(&r, v)
+	easyjsonD2b7633eDecodeTechnoparkDbmsInternalPkgDomain7(&r, v)
 	return r.Error()
 }
 
 // UnmarshalEasyJSON supports easyjson.Unmarshaler interface
 func (v *PostArray) UnmarshalEasyJSON(l *jlexer.Lexer) {
-	easyjsonD2b7633eDecodeTechnoparkDbmsInternalPkgDomain4(l, v)
+	easyjsonD2b7633eDecodeTechnoparkDbmsInternalPkgDomain7(l, v)
 }
-func easyjsonD2b7633eDecodeTechnoparkDbmsInternalPkgDomain5(in *jlexer.Lexer, out *Post) {
+func easyjsonD2b7633eDecodeTechnoparkDbmsInternalPkgDomain8(in *jlexer.Lexer, out *Post) {
 	isTopLevel := in.IsStart()
 	if in.IsNull() {
 		if isTopLevel {
@@ -510,7 +765,7 @@ func easyjsonD2b7633eDecodeTechnoparkDbmsInternalPkgDomain5(in *jlexer.Lexer, ou
 		in.Consumed()
 	}
 }
-func easyjsonD2b7633eEncodeTechnoparkDbmsInternalPkgDomain5(out *jwriter.Writer, in Post) {
+func easyjsonD2b7633eEncodeTechnoparkDbmsInternalPkgDomain8(out *jwriter.Writer, in Post) {
 	out.RawByte('{')
 	first := true
 	_ = first
@@ -560,27 +815,93 @@ func easyjsonD2b7633eEncodeTechnoparkDbmsInternalPkgDomain5(out *jwriter.Writer,
 // MarshalJSON supports json.Marshaler interface
 func (v Post) MarshalJSON() ([]byte, error) {
 	w := jwriter.Writer{}
-	easyjsonD2b7633eEncodeTechnoparkDbmsInternalPkgDomain5(&w, v)
+	easyjsonD2b7633eEncodeTechnoparkDbmsInternalPkgDomain8(&w, v)
 	return w.Buffer.BuildBytes(), w.Error
 }
 
 // MarshalEasyJSON supports easyjson.Marshaler interface
 func (v Post) MarshalEasyJSON(w *jwriter.Writer) {
-	easyjsonD2b7633eEncodeTechnoparkDbmsInternalPkgDomain5(w, v)
+	easyjsonD2b7633eEncodeTechnoparkDbmsInternalPkgDomain8(w, v)
 }
 
 // UnmarshalJSON supports json.Unmarshaler interface
 func (v *Post) UnmarshalJSON(data []byte) error {
 	r := jlexer.Lexer{Data: data}
-	easyjsonD2b7633eDecodeTechnoparkDbmsInternalPkgDomain5(&r, v)
+	easyjsonD2b7633eDecodeTechnoparkDbmsInternalPkgDomain8(&r, v)
 	return r.Error()
 }
 
 // UnmarshalEasyJSON supports easyjson.Unmarshaler interface
 func (v *Post) UnmarshalEasyJSON(l *jlexer.Lexer) {
-	easyjsonD2b7633eDecodeTechnoparkDbmsInternalPkgDomain5(l, v)
+	easyjsonD2b7633eDecodeTechnoparkDbmsInternalPkgDomain8(l, v)
 }
-func easyjsonD2b7633eDecodeTechnoparkDbmsInternalPkgDomain6(in *jlexer.Lexer, out *Forum) {
+func easyjsonD2b7633eDecodeTechnoparkDbmsInternalPkgDomain9(in *jlexer.Lexer, out *JSONMessageType) {
+	isTopLevel := in.IsStart()
+	if in.IsNull() {
+		if isTopLevel {
+			in.Consumed()
+		}
+		in.Skip()
+		return
+	}
+	in.Delim('{')
+	for !in.IsDelim('}') {
+		key := in.UnsafeFieldName(false)
+		in.WantColon()
+		if in.IsNull() {
+			in.Skip()
+			in.WantComma()
+			continue
+		}
+		switch key {
+		case "message":
+			out.Message = string(in.String())
+		default:
+			in.SkipRecursive()
+		}
+		in.WantComma()
+	}
+	in.Delim('}')
+	if isTopLevel {
+		in.Consumed()
+	}
+}
+func easyjsonD2b7633eEncodeTechnoparkDbmsInternalPkgDomain9(out *jwriter.Writer, in JSONMessageType) {
+	out.RawByte('{')
+	first := true
+	_ = first
+	{
+		const prefix string = ",\"message\":"
+		out.RawString(prefix[1:])
+		out.String(string(in.Message))
+	}
+	out.RawByte('}')
+}
+
+// MarshalJSON supports json.Marshaler interface
+func (v JSONMessageType) MarshalJSON() ([]byte, error) {
+	w := jwriter.Writer{}
+	easyjsonD2b7633eEncodeTechnoparkDbmsInternalPkgDomain9(&w, v)
+	return w.Buffer.BuildBytes(), w.Error
+}
+
+// MarshalEasyJSON supports easyjson.Marshaler interface
+func (v JSONMessageType) MarshalEasyJSON(w *jwriter.Writer) {
+	easyjsonD2b7633eEncodeTechnoparkDbmsInternalPkgDomain9(w, v)
+}
+
+// UnmarshalJSON supports json.Unmarshaler interface
+func (v *JSONMessageType) UnmarshalJSON(data []byte) error {
+	r := jlexer.Lexer{Data: data}
+	easyjsonD2b7633eDecodeTechnoparkDbmsInternalPkgDomain9(&r, v)
+	return r.Error()
+}
+
+// UnmarshalEasyJSON supports easyjson.Unmarshaler interface
+func (v *JSONMessageType) UnmarshalEasyJSON(l *jlexer.Lexer) {
+	easyjsonD2b7633eDecodeTechnoparkDbmsInternalPkgDomain9(l, v)
+}
+func easyjsonD2b7633eDecodeTechnoparkDbmsInternalPkgDomain10(in *jlexer.Lexer, out *Forum) {
 	isTopLevel := in.IsStart()
 	if in.IsNull() {
 		if isTopLevel {
@@ -619,7 +940,7 @@ func easyjsonD2b7633eDecodeTechnoparkDbmsInternalPkgDomain6(in *jlexer.Lexer, ou
 		in.Consumed()
 	}
 }
-func easyjsonD2b7633eEncodeTechnoparkDbmsInternalPkgDomain6(out *jwriter.Writer, in Forum) {
+func easyjsonD2b7633eEncodeTechnoparkDbmsInternalPkgDomain10(out *jwriter.Writer, in Forum) {
 	out.RawByte('{')
 	first := true
 	_ = first
@@ -654,23 +975,23 @@ func easyjsonD2b7633eEncodeTechnoparkDbmsInternalPkgDomain6(out *jwriter.Writer,
 // MarshalJSON supports json.Marshaler interface
 func (v Forum) MarshalJSON() ([]byte, error) {
 	w := jwriter.Writer{}
-	easyjsonD2b7633eEncodeTechnoparkDbmsInternalPkgDomain6(&w, v)
+	easyjsonD2b7633eEncodeTechnoparkDbmsInternalPkgDomain10(&w, v)
 	return w.Buffer.BuildBytes(), w.Error
 }
 
 // MarshalEasyJSON supports easyjson.Marshaler interface
 func (v Forum) MarshalEasyJSON(w *jwriter.Writer) {
-	easyjsonD2b7633eEncodeTechnoparkDbmsInternalPkgDomain6(w, v)
+	easyjsonD2b7633eEncodeTechnoparkDbmsInternalPkgDomain10(w, v)
 }
 
 // UnmarshalJSON supports json.Unmarshaler interface
 func (v *Forum) UnmarshalJSON(data []byte) error {
 	r := jlexer.Lexer{Data: data}
-	easyjsonD2b7633eDecodeTechnoparkDbmsInternalPkgDomain6(&r, v)
+	easyjsonD2b7633eDecodeTechnoparkDbmsInternalPkgDomain10(&r, v)
 	return r.Error()
 }
 
 // UnmarshalEasyJSON supports easyjson.Unmarshaler interface
 func (v *Forum) UnmarshalEasyJSON(l *jlexer.Lexer) {
-	easyjsonD2b7633eDecodeTechnoparkDbmsInternalPkgDomain6(l, v)
+	easyjsonD2b7633eDecodeTechnoparkDbmsInternalPkgDomain10(l, v)
 }

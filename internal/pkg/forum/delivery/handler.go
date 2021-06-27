@@ -1,9 +1,9 @@
 package delivery
 
 import (
-	"encoding/json"
 	"fmt"
 	"github.com/fasthttp/router"
+	"github.com/mailru/easyjson"
 	log "github.com/sirupsen/logrus"
 	"github.com/valyala/fasthttp"
 	"net/http"
@@ -40,7 +40,7 @@ http://localhost:5000/forum/create
 */
 func (handler *forumHandler) forumCreateHandler(ctx *fasthttp.RequestCtx) {
 	parsedForum := &domain.Forum{}
-	err := json.Unmarshal(ctx.PostBody(), parsedForum)
+	err := easyjson.Unmarshal(ctx.PostBody(), parsedForum)
 	if err != nil {
 		log.WithError(err).Error(errors.JSONUnmarshallError)
 		utilities.Resp(ctx, http.StatusBadRequest, errors.JSONDecodeErrorMessage)
@@ -89,7 +89,7 @@ func (handler *forumHandler) forumDetailsHandler(ctx *fasthttp.RequestCtx) {
 func (handler *forumHandler) forumCreateThreadHandler(ctx *fasthttp.RequestCtx) {
 	slugValue := ctx.UserValue("slug").(string)
 	parsedThread := &domain.Thread{}
-	err := json.Unmarshal(ctx.PostBody(), parsedThread)
+	err := easyjson.Unmarshal(ctx.PostBody(), parsedThread)
 	if err != nil {
 		log.WithError(err).Error(errors.JSONUnmarshallError)
 		utilities.Resp(ctx, http.StatusBadRequest, errors.JSONDecodeErrorMessage)

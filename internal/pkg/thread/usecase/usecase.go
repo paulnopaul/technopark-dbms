@@ -43,7 +43,7 @@ func (t threadUsecase) GetThreadIdAndForum(s utilities.SlugOrId) (*domain.Thread
 	return resThread, nil
 }
 
-func (t threadUsecase) CreatePosts(s utilities.SlugOrId, posts []domain.Post) ([]domain.Post, error) {
+func (t threadUsecase) CreatePosts(s utilities.SlugOrId, posts domain.PostArray) (domain.PostArray, error) {
 	threadInfo, err := t.GetThreadIdAndForum(s)
 	if err == thread.NotFound {
 		return nil, thread.NotFound
@@ -234,7 +234,7 @@ func generateGetPostsQuery(threadId int32, params utilities.ArrayOutParams) (str
 	return query, args, nil
 }
 
-func (t threadUsecase) GetThreadPosts(s utilities.SlugOrId, params utilities.ArrayOutParams) ([]domain.Post, error) {
+func (t threadUsecase) GetThreadPosts(s utilities.SlugOrId, params utilities.ArrayOutParams) (domain.PostArray, error) {
 	threadDetails, err := t.GetThreadIdAndForum(s)
 	if err != nil {
 		return nil, err
@@ -252,7 +252,7 @@ func (t threadUsecase) GetThreadPosts(s utilities.SlugOrId, params utilities.Arr
 	defer rows.Close()
 
 	// p.id, p.parent, p.author, p.message, p.is_edited, p.forum, p.thread, p.created
-	resPosts := make([]domain.Post, 0)
+	resPosts := make(domain.PostArray, 0)
 	for rows.Next() {
 		var p domain.Post
 		//var created *strfmt.DateTime

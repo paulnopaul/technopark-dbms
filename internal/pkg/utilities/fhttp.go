@@ -1,12 +1,12 @@
 package utilities
 
 import (
-	"encoding/json"
+	"github.com/mailru/easyjson"
 	"github.com/valyala/fasthttp"
 )
 
 func Resp(ctx *fasthttp.RequestCtx, code int, v interface{}) {
-	_ = json.NewEncoder(ctx).Encode(v)
+	_, _ = easyjson.MarshalToWriter(v.(easyjson.Marshaler), ctx)
 	ctx.SetContentType("application/json")
 	ctx.SetStatusCode(code)
 }

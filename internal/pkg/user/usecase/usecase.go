@@ -21,7 +21,7 @@ type userUsecase struct {
 	DB *pgx.ConnPool
 }
 
-func (u *userUsecase) GetProfiles(nickname, email string) ([]domain.User, error) {
+func (u *userUsecase) GetProfiles(nickname, email string) (domain.UserArray, error) {
 	query := getUsersDetailsQuery
 
 	rows, err := u.DB.Query(query, nickname, email)
@@ -30,7 +30,7 @@ func (u *userUsecase) GetProfiles(nickname, email string) ([]domain.User, error)
 	}
 	defer rows.Close()
 
-	resUsers := make([]domain.User, 0)
+	resUsers := make(domain.UserArray, 0)
 	for rows.Next() {
 		var currentUser domain.User
 		if err = rows.Scan(&currentUser.Nickname,
@@ -53,7 +53,7 @@ func NewUserUsecase(db *pgx.ConnPool) domain.UserUsecase {
 	}
 }
 
-func (u *userUsecase) CreateUser(nickname string, createData domain.User) (*domain.User, error, []domain.User) {
+func (u *userUsecase) CreateUser(nickname string, createData domain.User) (*domain.User, error, domain.UserArray) {
 	checkedProfiles, err := u.GetProfiles(nickname, createData.Email)
 	if err == nil {
 		return nil, user.AlreadyExistsError, checkedProfiles

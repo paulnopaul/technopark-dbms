@@ -36,7 +36,6 @@ func (handler *threadHandler) threadCreatePostsHandler(ctx *fasthttp.RequestCtx)
 	slugOrId := utilities.NewSlugOrId(ctx.UserValue("slug_or_id").(string))
 	var parsedPosts domain.PostArray
 
-	//err := json.Unmarshal(ctx.PostBody(), &parsedPosts)
 	err := easyjson.Unmarshal(ctx.PostBody(), &parsedPosts)
 	if err != nil {
 		log.WithError(err).Error(errors.JSONUnmarshallError)
@@ -90,7 +89,7 @@ func (handler *threadHandler) threadGetDetailsHandler(ctx *fasthttp.RequestCtx) 
 func (handler *threadHandler) threadUpdateDetailsHandler(ctx *fasthttp.RequestCtx) {
 	slugOrId := utilities.NewSlugOrId(ctx.UserValue("slug_or_id").(string))
 	parsedThread := &domain.Thread{}
-	err := json.Unmarshal(ctx.PostBody(), parsedThread)
+	err := easyjson.Unmarshal(ctx.PostBody(), parsedThread)
 	if err != nil {
 		log.WithError(err).Error(errors.JSONUnmarshallError)
 		utilities.Resp(ctx, http.StatusBadRequest, errors.JSONDecodeErrorMessage)
@@ -137,7 +136,7 @@ func (handler *threadHandler) threadGetPostsHandler(ctx *fasthttp.RequestCtx) {
 func (handler *threadHandler) threadVoteHandler(ctx *fasthttp.RequestCtx) {
 	slugOrId := utilities.NewSlugOrId(ctx.UserValue("slug_or_id").(string))
 	parsedVote := &domain.Vote{}
-	err := json.Unmarshal(ctx.PostBody(), parsedVote)
+	err := easyjson.Unmarshal(ctx.PostBody(), parsedVote)
 	if err != nil {
 		log.WithError(err).Error(errors.JSONUnmarshallError)
 		utilities.Resp(ctx, http.StatusBadRequest, errors.JSONDecodeErrorMessage)

@@ -160,7 +160,7 @@ func generateUserRequest(slug string, params utilities.ArrayOutParams) (string, 
 	return query, args, nil
 }
 
-func (u *forumUsecase) GetUsers(forumSlug string, params utilities.ArrayOutParams) ([]domain.User, error) {
+func (u *forumUsecase) GetUsers(forumSlug string, params utilities.ArrayOutParams) (domain.UserArray, error) {
 	forumExists, err := u.ForumExists(forumSlug)
 	if err != nil {
 		return nil, err
@@ -179,7 +179,7 @@ func (u *forumUsecase) GetUsers(forumSlug string, params utilities.ArrayOutParam
 	}
 	defer rows.Close()
 
-	resUsers := make([]domain.User, 0)
+	resUsers := make(domain.UserArray, 0)
 	for rows.Next() {
 		var currentUser domain.User
 		if err = rows.Scan(&currentUser.Nickname,
@@ -212,7 +212,7 @@ func generateForumThreadsQuery(forum string, params utilities.ArrayOutParams) (s
 	return req.ToSql()
 }
 
-func (u *forumUsecase) GetThreads(forumSlug string, params utilities.ArrayOutParams) ([]domain.Thread, error) {
+func (u *forumUsecase) GetThreads(forumSlug string, params utilities.ArrayOutParams) (domain.ThreadArray, error) {
 	forumExists, err := u.ForumExists(forumSlug)
 	if err != nil {
 		return nil, err
@@ -233,7 +233,7 @@ func (u *forumUsecase) GetThreads(forumSlug string, params utilities.ArrayOutPar
 	defer rows.Close()
 
 	// id, title, author, message, forum, votes, slug, created
-	resThreads := make([]domain.Thread, 0)
+	resThreads := make(domain.ThreadArray, 0)
 	for rows.Next() {
 		var currentThread domain.Thread
 		//var created *strfmt.DateTime

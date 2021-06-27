@@ -4,18 +4,15 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"technopark-dbms/internal/pkg/domain"
 )
 
-type JSONMessageType struct {
-	Message string `json:"message"`
+func JSONMessage(m string) domain.JSONMessageType {
+	return domain.JSONMessageType{Message: m}
 }
 
-func JSONMessage(m string) JSONMessageType {
-	return JSONMessageType{m}
-}
-
-func JSONErrorMessage(err error) JSONMessageType {
-	return JSONMessageType{fmt.Sprint(err)}
+func JSONErrorMessage(err error) domain.JSONMessageType {
+	return domain.JSONMessageType{Message: fmt.Sprint(err)}
 }
 
 var (

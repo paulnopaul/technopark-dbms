@@ -1,8 +1,8 @@
 package delivery
 
 import (
-	"encoding/json"
 	"github.com/fasthttp/router"
+	"github.com/mailru/easyjson"
 	log "github.com/sirupsen/logrus"
 	"github.com/valyala/fasthttp"
 	"net/http"
@@ -29,7 +29,7 @@ func NewUserHandler(r *router.Router, uc domain.UserUsecase) {
 
 func (handler *userHandler) userCreateHandler(ctx *fasthttp.RequestCtx) {
 	parsedUser := &domain.User{}
-	err := json.Unmarshal(ctx.PostBody(), parsedUser)
+	err := easyjson.Unmarshal(ctx.PostBody(), parsedUser)
 	if err != nil {
 		log.WithError(err).Error(errors.JSONUnmarshallError)
 		utilities.Resp(ctx, http.StatusBadRequest, errors.JSONDecodeErrorMessage)
@@ -66,7 +66,7 @@ func (handler *userHandler) userGetProfileHandler(ctx *fasthttp.RequestCtx) {
 
 func (handler *userHandler) userUpdateProfileHandler(ctx *fasthttp.RequestCtx) {
 	parsedUser := &domain.User{}
-	err := json.Unmarshal(ctx.PostBody(), parsedUser)
+	err := easyjson.Unmarshal(ctx.PostBody(), parsedUser)
 	if err != nil {
 		log.WithError(err).Error(errors.JSONUnmarshallError)
 		utilities.Resp(ctx, fasthttp.StatusInternalServerError, errors.JSONDecodeErrorMessage)

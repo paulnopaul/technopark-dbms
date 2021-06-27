@@ -43,12 +43,6 @@ func parseRelated(queryArgs *fasthttp.Args) (userRelated, forumRelated, threadRe
 	return
 }
 
-type postFull struct {
-	Post   *domain.Post   `json:"post"`
-	Forum  *domain.Forum  `json:"forum,omitempty"`
-	Thread *domain.Thread `json:"thread,omitempty"`
-	User   *domain.User   `json:"author,omitempty"`
-}
 
 func (handler *postHandler) postGetDetailsHandler(ctx *fasthttp.RequestCtx) {
 	postId, err := strconv.ParseInt(ctx.UserValue("id").(string), 10, 64)
@@ -70,7 +64,7 @@ func (handler *postHandler) postGetDetailsHandler(ctx *fasthttp.RequestCtx) {
 		return
 	}
 
-	postFull := postFull{foundPost, foundForum, foundThread, foundUser}
+	postFull := domain.PostFull{foundPost, foundForum, foundThread, foundUser}
 	utilities.Resp(ctx, fasthttp.StatusOK, postFull)
 }
 
