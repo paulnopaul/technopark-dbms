@@ -1,13 +1,13 @@
 package middlewares
 
 import (
+	log "github.com/sirupsen/logrus"
 	"github.com/valyala/fasthttp"
-	"log"
 )
 
 func Logging(next fasthttp.RequestHandler) fasthttp.RequestHandler {
 	return func(ctx *fasthttp.RequestCtx) {
-		log.Println(ctx.URI())
+		log.Info(string(ctx.RequestURI()))
 		next(ctx)
 	}
 }

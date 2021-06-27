@@ -14,11 +14,11 @@ type serviceHandler struct {
 	serviceUsecase domain.ServiceUsecase
 }
 
-func NewServiceHandler(r *router.Group, su domain.ServiceUsecase) {
+func NewServiceHandler(r *router.Router, su domain.ServiceUsecase) {
 	h := serviceHandler{
 		serviceUsecase: su,
 	}
-	s := r.Group("/service")
+	s := r.Group("/api/service")
 
 	s.POST("/clear", h.serviceClearHandler)
 	s.GET("/status", h.serviceStatusHandler)

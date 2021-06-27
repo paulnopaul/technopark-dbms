@@ -8,6 +8,7 @@ import (
 	"github.com/valyala/fasthttp"
 	forumDelivery "technopark-dbms/internal/pkg/forum/delivery"
 	forumDBUsecase "technopark-dbms/internal/pkg/forum/usecase"
+	"technopark-dbms/internal/pkg/middlewares"
 	postDelivery "technopark-dbms/internal/pkg/post/delivery"
 	postDBUsecase "technopark-dbms/internal/pkg/post/usecase"
 	serviceDelivery "technopark-dbms/internal/pkg/service/delivery"
@@ -28,7 +29,7 @@ func getPostgres() *pgx.ConnPool {
 	}
 	poolConf := pgx.ConnPoolConfig{
 		ConnConfig:     conf,
-		MaxConnections: 10,
+		MaxConnections: 10000,
 		AfterConnect:   nil,
 		AcquireTimeout: 0,
 	}
@@ -41,11 +42,9 @@ func getPostgres() *pgx.ConnPool {
 }
 
 func RunServer(addr string) {
-	g := router.New()
-	r := g.Group("/api")
+	r := router.New()
 
 	db := getPostgres()
-	log.SetLevel(log.FatalLevel)
 
 	serviceUsecase := serviceDBUsecase.NewServiceUsecase(db)
 	userUsecase := userDBUsecase.NewUserUsecase(db)
@@ -60,8 +59,7 @@ func RunServer(addr string) {
 	userDelivery.NewUserHandler(r, userUsecase)
 
 	log.Println("Listening at: ", addr)
-	//err := fasthttp.ListenAndServe(addr, middlewares.Logging(g.Handler))
-	err := fasthttp.ListenAndServe(addr, g.Handler)
+	err := fasthttp.ListenAndServe(addr, middlewares.Logging(r.Handler))
 	if err != nil {
 		log.Println(fmt.Sprint("Server error: ", err))
 	}

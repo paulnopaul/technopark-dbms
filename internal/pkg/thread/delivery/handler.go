@@ -18,11 +18,11 @@ type threadHandler struct {
 	threadUsecase domain.ThreadUsecase
 }
 
-func NewThreadHandler(r *router.Group, tu domain.ThreadUsecase) {
+func NewThreadHandler(r *router.Router, tu domain.ThreadUsecase) {
 	h := threadHandler{
 		threadUsecase: tu,
 	}
-	s := r.Group("/thread")
+	s := r.Group("/api/thread")
 
 	s.POST("/{slug_or_id}/create", h.threadCreatePostsHandler)
 	s.GET("/{slug_or_id}/details", h.threadGetDetailsHandler)
@@ -34,6 +34,7 @@ func NewThreadHandler(r *router.Group, tu domain.ThreadUsecase) {
 func (handler *threadHandler) threadCreatePostsHandler(ctx *fasthttp.RequestCtx) {
 	slugOrId := utilities.NewSlugOrId(ctx.UserValue("slug_or_id").(string))
 	var parsedPosts []domain.Post
+
 	err := json.Unmarshal(ctx.PostBody(), &parsedPosts)
 	if err != nil {
 		log.WithError(err).Error(errors.JSONUnmarshallError)

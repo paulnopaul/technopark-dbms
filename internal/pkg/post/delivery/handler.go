@@ -17,11 +17,11 @@ type postHandler struct {
 	postUsecase domain.PostUsecase
 }
 
-func NewPostHandler(r *router.Group, pu domain.PostUsecase) {
+func NewPostHandler(r *router.Router, pu domain.PostUsecase) {
 	h := postHandler{
 		postUsecase: pu,
 	}
-	s := r.Group("/post")
+	s := r.Group("/api/post")
 
 	s.GET("/{id:[0-9]+}/details", h.postGetDetailsHandler)
 	s.POST("/{id:[0-9]+}/details", h.postUpdateDetailsHandler)

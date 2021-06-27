@@ -17,11 +17,11 @@ type forumHandler struct {
 	forumUsecase domain.ForumUsecase
 }
 
-func NewForumHandler(r *router.Group, fu domain.ForumUsecase) {
+func NewForumHandler(r *router.Router, fu domain.ForumUsecase) {
 	h := forumHandler{
 		forumUsecase: fu,
 	}
-	s := r.Group("/forum")
+	s := r.Group("/api/forum")
 
 	s.POST("/create", h.forumCreateHandler)
 
