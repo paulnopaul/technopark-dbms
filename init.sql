@@ -39,7 +39,7 @@ create unlogged table threads
     title   text    not null,
     author  citext  not null,
     message text    not null,
-    votes   integer not null default 0,
+    votes   integer not null         default 0,
     slug    citext unique,
     created timestamp with time zone default now(),
     forum   citext  not null,
@@ -95,11 +95,13 @@ create index posts_way_index on posts (way);
 create index posts_way_second_index on posts ((way[2]));
 
 --- NEW THREAD
-create or replace function new_thread_update_count()
+create or replace function new_thread_update()
     returns trigger as
 $$
 begin
-    --- update thread count
+    insert into f_u(f, u)
+    select new.forum, new.author
+    on conflict do nothing;
     update forums
     set threads = threads + 1
     where slug = new.forum;
@@ -108,39 +110,22 @@ end;
 $$
     language 'plpgsql';
 
-create or replace function new_thread_add_relation()
+drop trigger if exists new_thread_created on threads;
+create trigger new_thread_created
+    after insert
+    on threads
+    for each row
+execute procedure new_thread_update();
+
+--- NEW POST
+
+create or replace function new_post_update()
     returns trigger as
 $$
 begin
-    --- update forum users
     insert into f_u(f, u)
     select new.forum, new.author
     on conflict do nothing;
-    return null;
-end;
-$$
-    language 'plpgsql';
-
-drop trigger if exists new_thread_created_count on threads;
-create trigger new_thread_created_count
-    after insert
-    on threads
-    for each row
-execute procedure new_thread_update_count();
-
-drop trigger if exists new_thread_created_u on threads;
-create trigger new_thread_created_u
-    after insert
-    on threads
-    for each row
-execute procedure new_thread_add_relation();
-
---- NEW POST
-create or replace function new_post_update_count()
-    returns trigger as
-$$
-begin
-    --- update post count
     update forums
     set posts = posts + 1
     where slug = new.forum;
@@ -149,73 +134,13 @@ end;
 $$
     language 'plpgsql';
 
-create or replace function new_post_add_relation()
-    returns trigger as
-$$
-begin
-    --- update forum users
-    insert into f_u(f, u)
-    select new.forum, new.author
-    on conflict do nothing;
-    return null;
-end;
-$$
-    language 'plpgsql';
-
-drop trigger if exists new_post_created_count on posts;
-create trigger new_post_created_count
+drop trigger if exists new_post_created on posts;
+create trigger new_post_created
     after insert
     on posts
     for each row
-execute procedure new_post_update_count();
+execute procedure new_post_update();
 
-drop trigger if exists new_post_created_u on posts;
-create trigger new_post_created_u
-    after insert
-    on posts
-    for each row
-execute procedure new_post_add_relation();
-
---- VOTES
-create or replace function new_vote_update_thread()
-    returns trigger as
-$$
-begin
-    update threads
-    set votes = votes + new.voice
-    where id = new.thread;
-    return null;
-end;
-$$
-    language 'plpgsql';
-
-create or replace function updated_vote_update_thread()
-    returns trigger as
-$$
-begin
-    update threads
-    set votes = (votes + new.voice - old.voice)
-    where id = new.thread;
-    return null;
-end;
-$$
-    language 'plpgsql';
-
-drop trigger if exists new_vote_set on votes;
-create trigger new_vote_set
-    after insert
-    on votes
-    for each row
-execute procedure new_vote_update_thread();
-
-drop trigger if exists vote_updated on votes;
-create trigger vote_updated
-    after update
-    on votes
-    for each row
-execute procedure updated_vote_update_thread();
-
---- POSTS
 create or replace function update_post_ways()
     returns trigger as
 $$
@@ -240,16 +165,49 @@ end;
 $$
     language 'plpgsql';
 
-
+drop trigger if exists add_path on posts;
 create trigger add_path
     before insert
     on posts
     for each row
 execute procedure update_post_ways();
 
-ANALYZE users;
-ANALYZE forums;
-ANALYZE threads;
-ANALYZE posts;
-ANALYZE votes;
-ANALYZE f_u;
+--- VOTES
+create or replace function new_vote_update_thread()
+    returns trigger as
+$$
+begin
+    update threads
+    set votes = votes + new.voice
+    where id = new.thread;
+    return null;
+end;
+$$
+    language 'plpgsql';
+
+drop trigger if exists new_vote_set on votes;
+create trigger new_vote_set
+    after insert
+    on votes
+    for each row
+execute procedure new_vote_update_thread();
+
+
+create or replace function updated_vote_update_thread()
+    returns trigger as
+$$
+begin
+    update threads
+    set votes = (votes + new.voice - old.voice)
+    where id = new.thread;
+    return null;
+end;
+$$
+    language 'plpgsql';
+
+drop trigger if exists vote_updated on votes;
+create trigger vote_updated
+    after update
+    on votes
+    for each row
+execute procedure updated_vote_update_thread();

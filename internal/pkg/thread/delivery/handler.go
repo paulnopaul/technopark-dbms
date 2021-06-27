@@ -59,7 +59,9 @@ func (handler *threadHandler) threadCreatePostsHandler(ctx *fasthttp.RequestCtx)
 			return
 		}
 	}
-	utilities.Resp(ctx, responseStatus, createdPosts)
+	_ = json.NewEncoder(ctx).Encode(createdPosts)
+	ctx.SetContentType("application/json")
+	ctx.SetStatusCode(responseStatus)
 }
 
 func (handler *threadHandler) threadGetDetailsHandler(ctx *fasthttp.RequestCtx) {
