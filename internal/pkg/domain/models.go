@@ -33,6 +33,9 @@ type Post struct {
 	Created  strfmt.DateTime `json:"created,omitempty"`
 }
 
+//easyjson:json
+type PostArray []Post
+
 type PostUsecase interface {
 	GetPostById(id int64) (*Post, error)
 	GetPostDetails(id int64, relatedUser bool, relatedForum bool, relatedThread bool) (*Post, *Forum, *Thread, *User, error)

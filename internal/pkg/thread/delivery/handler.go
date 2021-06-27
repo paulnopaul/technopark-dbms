@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/fasthttp/router"
+	"github.com/mailru/easyjson"
 	log "github.com/sirupsen/logrus"
 	"github.com/valyala/fasthttp"
 	"net/http"
@@ -33,9 +34,10 @@ func NewThreadHandler(r *router.Router, tu domain.ThreadUsecase) {
 
 func (handler *threadHandler) threadCreatePostsHandler(ctx *fasthttp.RequestCtx) {
 	slugOrId := utilities.NewSlugOrId(ctx.UserValue("slug_or_id").(string))
-	var parsedPosts []domain.Post
+	var parsedPosts domain.PostArray
 
-	err := json.Unmarshal(ctx.PostBody(), &parsedPosts)
+	//err := json.Unmarshal(ctx.PostBody(), &parsedPosts)
+	err := easyjson.Unmarshal(ctx.PostBody(), &parsedPosts)
 	if err != nil {
 		log.WithError(err).Error(errors.JSONUnmarshallError)
 		utilities.Resp(ctx, http.StatusBadRequest, errors.JSONDecodeErrorMessage)
