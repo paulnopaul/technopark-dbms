@@ -20,7 +20,7 @@ type threadUsecase struct {
 	UUCase domain.UserUsecase
 }
 
-func (t threadUsecase) getThreadIdAndForum(s utilities.SlugOrId) (*domain.Thread, error) {
+func (t threadUsecase) GetThreadIdAndForum(s utilities.SlugOrId) (*domain.Thread, error) {
 	query := "select id, forum from threads where"
 	args := make([]interface{}, 0)
 	if s.IsSlug {
@@ -44,8 +44,7 @@ func (t threadUsecase) getThreadIdAndForum(s utilities.SlugOrId) (*domain.Thread
 }
 
 func (t threadUsecase) CreatePosts(s utilities.SlugOrId, posts []domain.Post) ([]domain.Post, error) {
-
-	threadInfo, err := t.getThreadIdAndForum(s)
+	threadInfo, err := t.GetThreadIdAndForum(s)
 	if err == thread.NotFound {
 		return nil, thread.NotFound
 	} else if err != nil {
@@ -53,42 +52,22 @@ func (t threadUsecase) CreatePosts(s utilities.SlugOrId, posts []domain.Post) ([
 	} else if threadInfo == nil {
 		return nil, errors.New("WTF")
 	}
-	if len(posts) == 0 {
-		return posts, nil
-	}
 
-	if posts[0].Parent != 0 {
-		var pThread int32
-		err = t.DB.QueryRow("select thread from posts where id = $1;", posts[0].Parent).Scan(&pThread)
-		if err != nil {
-			return nil, post.InvalidParentError
-		}
-		if pThread != threadInfo.ID {
-			return nil, post.InvalidParentError
-		}
-	}
 	now := strfmt.DateTime(time.Now())
-	req := psql.Insert("posts(parent, author, message, is_edited, thread, created, forum)")
 	for i, _ := range posts {
 		posts[i].Created = now
 		posts[i].Thread = threadInfo.ID
 		posts[i].Forum = threadInfo.Forum
-		req = req.Values(posts[i].Parent, posts[i].Author, posts[i].Message, posts[i].IsEdited, posts[i].Thread, posts[i].Created, posts[i].Forum)
 	}
-	req = req.Suffix("returning id")
-	query, args, _ := req.ToSql()
-	rows, err := t.DB.Query(query, args...)
-	if err != nil {
-		return nil, thread.AuthorNotExists
-	}
-	defer rows.Close()
+
+	query := "insert into posts(parent, author, message, is_edited, thread, created, forum) values ($1, $2, $3, $4, $5, $6, $7) returning id;"
 	for i, _ := range posts {
-		if rows.Next() {
-			err = rows.Scan(&posts[i].ID)
-			if err != nil {
-				return nil, err
+		err := t.DB.QueryRow(query, posts[i].Parent, posts[i].Author, posts[i].Message, posts[i].IsEdited, posts[i].Thread, posts[i].Created, posts[i].Forum).
+			Scan(&posts[i].ID)
+		if err != nil {
+			if err.Error() == "ERROR: 66666 (SQLSTATE 66666)" {
+				return nil, post.InvalidParentError
 			}
-		} else {
 			return nil, thread.AuthorNotExists
 		}
 	}
@@ -256,7 +235,7 @@ func generateGetPostsQuery(threadId int32, params utilities.ArrayOutParams) (str
 }
 
 func (t threadUsecase) GetThreadPosts(s utilities.SlugOrId, params utilities.ArrayOutParams) ([]domain.Post, error) {
-	threadDetails, err := t.GetThreadDetails(s)
+	threadDetails, err := t.GetThreadIdAndForum(s)
 	if err != nil {
 		return nil, err
 	}

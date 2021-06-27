@@ -70,6 +70,7 @@ type Vote struct {
 type ThreadUsecase interface {
 	CreatePosts(s utilities.SlugOrId, posts []Post) ([]Post, error)
 	GetThreadDetails(s utilities.SlugOrId) (*Thread, error)
+	GetThreadIdAndForum(s utilities.SlugOrId) (*Thread, error)
 	UpdateThreadDetails(s utilities.SlugOrId, threadUpdate Thread) (*Thread, error)
 	GetThreadPosts(s utilities.SlugOrId, params utilities.ArrayOutParams) ([]Post, error)
 	CreateThreadVote(s utilities.SlugOrId, vote Vote) (*Thread, error)

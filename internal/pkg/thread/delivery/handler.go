@@ -67,7 +67,7 @@ func (handler *threadHandler) threadCreatePostsHandler(ctx *fasthttp.RequestCtx)
 
 func (handler *threadHandler) threadGetDetailsHandler(ctx *fasthttp.RequestCtx) {
 	slugOrId := utilities.NewSlugOrId(ctx.UserValue("slug_or_id").(string))
-	forumDetails, err := handler.threadUsecase.GetThreadDetails(slugOrId)
+	threadDetails, err := handler.threadUsecase.GetThreadDetails(slugOrId)
 	if err != nil {
 		log.WithError(err).Error("thread get details error")
 		if err == thread.NotFound {
@@ -82,7 +82,7 @@ func (handler *threadHandler) threadGetDetailsHandler(ctx *fasthttp.RequestCtx) 
 			return
 		}
 	}
-	utilities.Resp(ctx, fasthttp.StatusOK, forumDetails)
+	utilities.Resp(ctx, fasthttp.StatusOK, threadDetails)
 }
 
 func (handler *threadHandler) threadUpdateDetailsHandler(ctx *fasthttp.RequestCtx) {
