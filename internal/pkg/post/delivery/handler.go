@@ -27,23 +27,6 @@ func NewPostHandler(r *router.Router, pu domain.PostUsecase) {
 	s.POST("/{id:[0-9]+}/details", h.postUpdateDetailsHandler)
 }
 
-func parseRelated(queryArgs *fasthttp.Args) (userRelated, forumRelated, threadRelated bool) {
-	values := strings.Split(string(queryArgs.Peek("related")), ",")
-	if values != nil {
-		for _, value := range values {
-			if string(value) == "user" {
-				userRelated = true
-			} else if string(value) == "forum" {
-				forumRelated = true
-			} else if string(value) == "thread" {
-				threadRelated = true
-			}
-		}
-	}
-	return
-}
-
-
 func (handler *postHandler) postGetDetailsHandler(ctx *fasthttp.RequestCtx) {
 	postId, err := strconv.ParseInt(ctx.UserValue("id").(string), 10, 64)
 	if err != nil {
@@ -51,7 +34,11 @@ func (handler *postHandler) postGetDetailsHandler(ctx *fasthttp.RequestCtx) {
 		utilities.Resp(ctx, errors.CodeFromDeliveryError(errors.URLParamsError), errors.JSONURLParamsErrorMessage)
 		return
 	}
-	userRelated, forumRelated, threadRelated := parseRelated(ctx.QueryArgs())
+
+	values := string(ctx.QueryArgs().Peek("related"))
+	userRelated := strings.Contains(values, "user")
+	forumRelated := strings.Contains(values, "forum")
+	threadRelated := strings.Contains(values, "thread")
 
 	foundPost, foundForum, foundThread, foundUser, err := handler.postUsecase.GetPostDetails(postId, userRelated, forumRelated, threadRelated)
 	if err != nil {
