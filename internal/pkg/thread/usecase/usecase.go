@@ -65,13 +65,16 @@ func (t threadUsecase) CreatePosts(s utilities.SlugOrId, posts domain.PostArray)
 
 	//query := "insert into posts(parent, author, message, is_edited, thread, created, forum) values ($1, $2, $3, $4, $5, $6, $7) returning id;"
 	req := psql.Insert("posts(parent, author, message, is_edited, thread, created, forum)")
+	userReq := psql.Insert("f_u(f, u)")
 	for i, _ := range posts {
 		posts[i].Created = now
 		posts[i].Thread = threadInfo.ID
 		posts[i].Forum = threadInfo.Forum
 		req = req.Values(posts[i].Parent, posts[i].Author, posts[i].Message, posts[i].IsEdited, posts[i].Thread, posts[i].Created, posts[i].Forum)
+		userReq = userReq.Values(threadInfo.Forum, posts[i].Author)
 	}
 	req = req.Suffix("returning id")
+	userReq = userReq.Suffix("on conflict do nothing")
 	query, args, _ := req.ToSql()
 
 	tx, err := t.DB.Begin()
@@ -81,6 +84,9 @@ func (t threadUsecase) CreatePosts(s utilities.SlugOrId, posts domain.PostArray)
 	defer tx.Rollback()
 
 	rows, err := tx.Query(query, args...)
+	if err != nil {
+		return nil, err
+	}
 	defer rows.Close()
 
 	for i := 0; rows.Next(); i++ {
@@ -100,7 +106,17 @@ func (t threadUsecase) CreatePosts(s utilities.SlugOrId, posts domain.PostArray)
 			return nil, rows.Err()
 		}
 	}
+	query = "update forums set posts = posts + $1 where slug = $2;"
+	_, err = tx.Exec(query, len(posts), threadInfo.Forum)
+	if err != nil {
+		return nil, err
+	}
 
+	query, args, _ = userReq.ToSql()
+	_, err = tx.Exec(query, args...)
+	if err != nil {
+		return nil, err
+	}
 	err = tx.Commit()
 	if err != nil {
 		return nil, err
@@ -160,8 +176,7 @@ func (t threadUsecase) UpdateThreadDetails(s utilities.SlugOrId, threadUpdate do
 }
 
 func parentPostsQuery(id int32, limit int, since int64, desc bool) (string, []interface{}) {
-	var order string
-	var s string
+	order, s := "asc", " > "
 	if desc {
 		order = "desc"
 	} else {
@@ -184,12 +199,9 @@ func parentPostsQuery(id int32, limit int, since int64, desc bool) (string, []in
 }
 
 func flatPostsQuery(id int32, limit int, since int64, desc bool) (string, []interface{}) {
-	var order string
-	var s string
+	order, s := "asc", " > "
 	if desc {
 		order, s = "desc", " < "
-	} else {
-		order, s = "asc", " > "
 	}
 	args := []interface{}{id, limit}
 	query := `select p.id, p.parent, p.author, p.message, p.is_edited, p.forum, p.thread, p.created
@@ -203,17 +215,12 @@ func flatPostsQuery(id int32, limit int, since int64, desc bool) (string, []inte
 }
 
 func treePostsQuery(id int32, limit int, since int64, desc bool) (string, []interface{}) {
-	var order string
-	var s string
+	order, s := "asc", " > "
 	if desc {
 		order = "desc"
-	} else {
-		order = "asc"
 	}
 	if desc && since != 0 {
 		s = " < "
-	} else {
-		s = " > "
 	}
 	args := []interface{}{id, limit}
 	query := `select p.id, p.parent, p.author, p.message, p.is_edited, p.forum, p.thread, p.created

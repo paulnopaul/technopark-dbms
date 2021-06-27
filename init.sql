@@ -1,7 +1,7 @@
 create extension if not exists citext;
 
 drop table if exists users cascade;
-create unlogged table users
+create table users
 (
     id       bigserial                      not null,
     nickname citext collate "C" primary key not null,
@@ -11,7 +11,7 @@ create unlogged table users
 );
 
 drop table if exists forums cascade;
-create unlogged table forums
+create table forums
 (
     id       bigserial not null,
     slug     citext primary key,
@@ -23,7 +23,7 @@ create unlogged table forums
 );
 
 drop table if exists f_u cascade;
-create unlogged table f_u
+create table f_u
 (
     f citext             not null,
     u citext collate "C" not null,
@@ -33,7 +33,7 @@ create unlogged table f_u
 );
 
 drop table if exists threads cascade;
-create unlogged table threads
+create table threads
 (
     id      bigserial primary key,
     title   text    not null,
@@ -48,7 +48,7 @@ create unlogged table threads
 );
 
 drop table if exists votes cascade;
-create unlogged table votes
+create table votes
 (
     thread   bigint not null,
     username citext not null,
@@ -60,7 +60,7 @@ create unlogged table votes
 
 
 drop table if exists posts cascade;
-create unlogged table if not exists posts
+create table if not exists posts
 (
     id        bigserial primary key,
     parent    bigint,
@@ -91,6 +91,7 @@ create index votes_index on votes (thread, username);
 
 create index post_forum_index on posts (forum);
 create index post_user_index on posts (author);
+create index post_thread_index on posts (thread);
 create index posts_way_index on posts (way);
 create index posts_way_second_index on posts ((way[2]));
 
@@ -118,28 +119,28 @@ create trigger new_thread_created
 execute procedure new_thread_update();
 
 --- NEW POST
-
-create or replace function new_post_update()
-    returns trigger as
-$$
-begin
-    insert into f_u(f, u)
-    select new.forum, new.author
-    on conflict do nothing;
-    update forums
-    set posts = posts + 1
-    where slug = new.forum;
-    return null;
-end;
-$$
-    language 'plpgsql';
-
-drop trigger if exists new_post_created on posts;
-create trigger new_post_created
-    after insert
-    on posts
-    for each row
-execute procedure new_post_update();
+--
+-- create or replace function new_post_update()
+--     returns trigger as
+-- $$
+-- begin
+--     insert into f_u(f, u)
+--     select new.forum, new.author
+--     on conflict do nothing;
+-- --     update forums
+-- --     set posts = posts + 1
+-- --     where slug = new.forum;
+--     return null;
+-- end;
+-- $$
+--     language 'plpgsql';
+--
+-- drop trigger if exists new_post_created on posts;
+-- create trigger new_post_created
+--     after insert
+--     on posts
+--     for each row
+-- execute procedure new_post_update();
 
 create or replace function update_post_ways()
     returns trigger as

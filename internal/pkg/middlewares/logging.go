@@ -13,6 +13,8 @@ func Logging(next fasthttp.RequestHandler) fasthttp.RequestHandler {
 		dur := time.Since(start)
 		if dur > 90*time.Millisecond {
 			log.Warn(string(ctx.RequestURI()) + " " + dur.String())
+		} else {
+			log.Info(string(ctx.RequestURI()))
 		}
 	}
 }
