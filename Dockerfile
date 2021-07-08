@@ -4,7 +4,6 @@ ENV GO111MODULE=on
 WORKDIR /opt/server/
 RUN go mod tidy
 RUN go build
-
 FROM ubuntu:20.04 AS release
 RUN apt -y update && apt install -y locales gnupg2
 RUN locale-gen en_US.UTF-8
